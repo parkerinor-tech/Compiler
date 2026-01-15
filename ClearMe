@@ -1,6 +1,0 @@
-#/usr/bin/bash
-
-ps -ef | grep jan | grep .vscode | awk '{print $2}' | while read pid; do
-echo "Killing PID: $pid"
-kill $pid
-done
