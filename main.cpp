@@ -20,7 +20,7 @@
 #include "tokens.h"
 
 cSymbolTable g_symbolTable;
-long long cSymbol::nextId = 0;
+//long long cSymbol::nextId = 0;
 yylval_t yylval;
 int g_insert = 1;           // global to indicate that symbols should be 
                             // inserted into the symbol table
@@ -35,7 +35,7 @@ int main(int argc, char **argv)
     int result = 0;
     int token;
 
-    std::cout << "Philip Howard" << std::endl;
+    std::cout << "Parker Fagen" << std::endl;
 
     // open input
     if (argc > 1)

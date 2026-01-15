@@ -12,6 +12,8 @@
 COPTS=-Wall -g -c -O0 -std=c++11
 OBJS=main.o \
 	 langlex.o \
+	 cSymbolTable.o\
+	 cSymbol.o \
 
 all: lang
 
@@ -40,4 +42,8 @@ langlex.o: langlex.c
 
 lang: $(OBJS)
 	g++ $(OBJS) -o lang
+cSymbol.o: cSymbol.cpp cSymbol.h
+	g++ $(COPTS) cSymbol.cpp -o cSymbol.o
 
+cSymbolTable.o: cSymbolTable.cpp cSymbolTable.h
+	g++ $(COPTS) cSymbolTable.cpp -o cSymbolTable.o

@@ -3,7 +3,11 @@
 // You are not required to use any of these names, but you will need the 
 // described functionality
 //
+#pragma once
+#include <string>
+#include "cSymbol.h"
 
+using std::string;
 // NOTE: The following typedef will have to be replaced by something meaningful
 typedef void symbolTable_t;
 
