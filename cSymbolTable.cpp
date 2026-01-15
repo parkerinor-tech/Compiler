@@ -24,7 +24,7 @@ static vector<Scope *> g_scopes;
 // Constructor
 cSymbolTable::cSymbolTable()
 {
-    IncreaseScope(); // global scope
+    IncreaseScope(); //  global scope
 }
 
 //**************************************************
