@@ -28,7 +28,7 @@ extern cSymbolTable g_symbolTable;
 #endif
 
 int Return(int val);
-static int Process_Identifier(const char *text);
+static int ProcessIdentifier(char * inputIdentifier);
 %}
 
 %option noyywrap
@@ -47,8 +47,8 @@ whitespace       [\t\n\r" " ]
 "/*"([^*]|\*+[^*/])*\*+"/"   { /* ignore block comments */ }
 "("     { return '('; }
 ")"     { return ')';  }
-"{"     { return '{'; g_symbolTable.IncreaseScope();}
-"}"     { return '}'; g_symbolTable.DecreaseScope();}
+"{"     { g_symbolTable.IncreaseScope(); return '{'; }
+"}"     { g_symbolTable.DecreaseScope(); return '}'; }
 "["     { return '['; }
 "]"     { return ']'; }
 ";"     { return ';'; }
@@ -92,7 +92,7 @@ whitespace       [\t\n\r" " ]
 
 
 
-[A-Za-z_][A-Za-z0-9_]*    DO_RETURN(Process_Identifier(yytext));
+[A-Za-z_][A-Za-z0-9_]* { return ProcessIdentifier(yytext); }
 
 [1-9]*[0-9]+ {return INT_VAL;}
 
@@ -115,17 +115,26 @@ int Return(int val)
 
 //******************************************************
 // Process_Identifier: create symbols in symbol table
-static int Process_Identifier(const char *text)
+static int ProcessIdentifier(char * inputIdentifier)
 {
-    std::string name(text);                  // <-- use text, not yytext
-    cSymbol *sym = g_symbolTable.FindLocal(name);
+    string name(inputIdentifier);
+    cSymbol *sym = nullptr;
 
-    if (!sym)
+    if (g_insert)
+    {
+        sym = g_symbolTable.FindLocal(name);
+        if (sym == nullptr)
+        {
+            sym = new cSymbol(name);
+            g_symbolTable.Insert(sym);
+        }
+    }
+    else
     {
         sym = new cSymbol(name);
-        g_symbolTable.Insert(sym);
     }
-
     yylval.symbol = sym;
+
     return IDENTIFIER;
+   
 }

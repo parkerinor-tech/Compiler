@@ -67,6 +67,9 @@ cSymbol *cSymbolTable::Find(string name)
 //**************************************************
 cSymbol *cSymbolTable::FindLocal(string name)
 {
+    if(g_scopes.empty())
+        IncreaseScope();
+        
     Scope *current = g_scopes.back();
     auto it = current->find(name);
     if (it != current->end())

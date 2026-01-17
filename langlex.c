@@ -583,7 +583,7 @@ extern cSymbolTable g_symbolTable;
 #endif
 
 int Return(int val);
-static int Process_Identifier(const char *text);
+static int ProcessIdentifier(char * inputIdentifier);
 #line 587 "langlex.c"
 #define YY_NO_INPUT 1
 #line 41 "lang.l"
@@ -897,12 +897,12 @@ YY_RULE_SETUP
 case 5:
 YY_RULE_SETUP
 #line 51 "lang.l"
-{ return '{'; g_symbolTable.IncreaseScope();}
+{ g_symbolTable.IncreaseScope(); return '{'; }
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
 #line 52 "lang.l"
-{ return '}'; g_symbolTable.DecreaseScope();}
+{ g_symbolTable.DecreaseScope(); return '}'; }
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
@@ -1077,7 +1077,7 @@ YY_RULE_SETUP
 case 41:
 YY_RULE_SETUP
 #line 96 "lang.l"
-DO_RETURN(Process_Identifier(yytext));
+{ return ProcessIdentifier(yytext); }
 	YY_BREAK
 case 42:
 YY_RULE_SETUP
@@ -2098,17 +2098,26 @@ int Return(int val)
 
 //******************************************************
 // Process_Identifier: create symbols in symbol table
-static int Process_Identifier(const char *text)
+static int ProcessIdentifier(char * inputIdentifier)
 {
-    std::string name(text);                  // <-- use text, not yytext
-    cSymbol *sym = g_symbolTable.FindLocal(name);
+    string name(inputIdentifier);
+    cSymbol *sym = nullptr;
 
-    if (!sym)
+    if (g_insert)
+    {
+        sym = g_symbolTable.FindLocal(name);
+        if (sym == nullptr)
+        {
+            sym = new cSymbol(name);
+            g_symbolTable.Insert(sym);
+        }
+    }
+    else
     {
         sym = new cSymbol(name);
-        g_symbolTable.Insert(sym);
     }
-
     yylval.symbol = sym;
+
     return IDENTIFIER;
+   
 }
