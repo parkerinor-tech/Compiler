@@ -29,6 +29,7 @@ class cSymbol
             return result;
         }
 
+        long long GetId() const { return m_id; }
         // Return name of symbol
         string GetName() { return m_name; }
     protected:

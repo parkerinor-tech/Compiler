@@ -10,7 +10,6 @@
 using std::string;
 // NOTE: The following typedef will have to be replaced by something meaningful
 typedef void symbolTable_t;
-
 class cSymbolTable
 {
     public:
@@ -47,3 +46,5 @@ class cSymbolTable
 
 // declare the global symbol table. The definition will have to be in a cpp file
 extern cSymbolTable g_symbolTable;
+//extern bool g_insert;
+extern int g_insert;
