@@ -9,6 +9,7 @@
 
 #include "lex.h"
 #include "langparse.h"
+#include "cSymbol.h"
 
 // Macros that can be used to create debug output from the scanner
 // The first one does NOT create debug output, the second does.
@@ -30,10 +31,22 @@ int Return(int val);
 %%
 
     // token definitions. I gave "program" as an example
-program                     DO_RETURN(PROGRAM);
-print                       DO_RETURN(PRINT);
-[0-9]+                      {yylval.int_val = atoi(yytext); DO_RETURN(INT_VAL);}
-[{};()]                     DO_RETURN(yytext[0]);
+    
+"program"        { DO_RETURN(PROGRAM); }
+"print"          { DO_RETURN(PRINT); }
+"char"|"int"|"float"|"long"|"double" { DO_RETURN(TYPE_ID); }
+[a-zA-Z_][a-zA-Z0-9_]* { yylval.symbol = new cSymbol(yytext); DO_RETURN(IDENTIFIER); }
+[0-9]+"."[0-9]+  { yylval.float_val = atof(yytext); DO_RETURN(FLOAT_VAL); }
+[0-9]+           { yylval.int_val = atoi(yytext); DO_RETURN(INT_VAL); }
+
+
+"+"                         DO_RETURN('+');
+"-"                         DO_RETURN('-');
+"*"                         DO_RETURN('*');
+"/"                         DO_RETURN('/');
+"%"                         DO_RETURN('%');
+
+[{}();]          { DO_RETURN(yytext[0]); }
 
 %%
 

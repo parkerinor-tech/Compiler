@@ -18,6 +18,7 @@
  /* union defines the type for lexical values */
 %union{
     int             int_val;
+    double           float_val;
     std::string*    str_val;
     cAstNode*       ast_node;
     cProgramNode*   program_node;
@@ -148,7 +149,8 @@ paramspec:  var_decl
                                     {  }
 
 stmts:      stmts stmt
-                                {  }
+                                { $$ = $1;
+                                  $$ -> Insert($2); }
         |   stmt
                             { $$ = new cStmtsNode($1); }
 
@@ -171,7 +173,7 @@ stmt:       IF '(' expr ')' stmts ENDIF ';'
         |   RETURN expr ';'
                             {  }
         |   error ';'
-                            {}
+                            {  }
 
 func_call:  IDENTIFIER '(' params ')'
                                     {  }
@@ -205,31 +207,31 @@ expr:       expr EQUALS addit
                             { $$ = $1; }
 
 addit:      addit '+' term
-                                {  }
+                            { $$ = new cBinaryExprNode($1, new cOpNode('+'), $3); }
         |   addit '-' term
-                            {  }
+                            { $$ = new cBinaryExprNode($1, new cOpNode('-'), $3); }
         |   term
-                            {  }
+                            { $$ = $1; }
 
 term:       term '*' fact
-                                {  }
+                            { $$ = new cBinaryExprNode($1, new cOpNode('*'), $3); }
         |   term '/' fact
-                            {  }
+                            { $$ = new cBinaryExprNode($1, new cOpNode('/'), $3); }
         |   term '%' fact
-                            {  }
+                            {  $$ = new cBinaryExprNode($1, new cOpNode('%'), $3);}
         |   fact
-                            {  }
+                            { $$ = $1; }
 
 fact:       '(' expr ')'
-                                {  }
+                            { $$ = $2; }
         |   INT_VAL
                             { $$ = new cIntExprNode($1); }
         |   FLOAT_VAL
-                            {  }
+                            { $$ = new cFloatExprNode($1); }
         |   varref
-                            {  }
+                            { $$ = new cVarExprNode($1); }
         |   func_call
-                            {  }
+                            {  $$ = new cFuncExprNode($1); }
 
 %%
 
