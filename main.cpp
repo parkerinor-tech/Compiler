@@ -34,7 +34,7 @@ long long cSymbol::nextId;
 
 int main(int argc, char **argv)
 {
-    //std::cout << "Aleksen Thayer" << std::endl;
+    //std::cout << "Parker Fagen" << std::endl;
 
     const char *outfile_name;
     int result = 0;
