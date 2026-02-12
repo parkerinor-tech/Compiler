@@ -1,14 +1,9 @@
 #pragma once
-//**************************************
-// cSymbol.h
+//********************************************************
+// cSymbol.h - Define a class for symbols
 //
-// Defines class used to represent symbols.
-// Later labs will add features to this class.
+// Author: Philip Howard
 //
-// Author: Phil Howard 
-// phil.howard@oit.edu
-//
-
 #include <string>
 
 using std::string;
@@ -18,27 +13,35 @@ using std::string;
 class cSymbol : public cAstNode
 {
     public:
-        // param is name of symbol
+        // Construct a symbol given its name
         cSymbol(string name) : cAstNode()
         {
-            m_id = ++nextId;        // get next available ID
+            m_id = ++nextId;
             m_name = name;
+            m_isType=false;
         }
 
-        // return name of symbol
-        string GetName() { return m_name; }
 
-        virtual string AttributesToString()
+         virtual string AttributesToString() override
         {
             string result(" id=\"");
             result += std::to_string(m_id);
             result += "\" name=\"" + m_name + "\"";
             return result;
         }
-        virtual string NodeType() { return string("sym"); }
-        virtual void Visit(cVisitor *visitor) { visitor->Visit(this); }
+
+
+        // Return name of symbol
+        string GetName() { return m_name; }
+        long long GetId() { return m_id; }
+         virtual string NodeType() override { return string("sym"); }
+        virtual void Visit(cVisitor *visitor)override { visitor->Visit(this); }
+        void SetIsType(bool isType) { m_isType = isType; }
+    bool GetIsType() const { return m_isType; }
+
     protected:
-        static long long nextId;        // Next avail symbol ID
-        long long m_id;                 // Unique ID for this symbol
-        string m_name;                  // name of symbol
+        static long long nextId;    // keeps track of unique symbol IDs
+        long long m_id;             // Unique ID for this symbol
+        string m_name;              // Symbol name
+        bool m_isType;
 };

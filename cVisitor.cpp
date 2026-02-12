@@ -22,4 +22,9 @@ void cVisitor::Visit(cProgramNode *node)      { node->VisitAllChildren(this); }
 void cVisitor::Visit(cStmtNode *node)         { node->VisitAllChildren(this); }
 void cVisitor::Visit(cStmtsNode *node)        { node->VisitAllChildren(this); }
 void cVisitor::Visit(cSymbol *node)           { node->VisitAllChildren(this); }
+void cVisitor::Visit(cArgsNode *node)         { node->VisitAllChildren(this); }
+void cVisitor::Visit(cParamsNode *node)       { node->VisitAllChildren(this); }
+void cVisitor::Visit(cFuncHeaderNode *node)   { node->VisitAllChildren(this); }
+void cVisitor::Visit(cFuncDeclNode *node)     { node->VisitAllChildren(this); }
+void cVisitor::Visit(cFuncCallNode *node)     { node->VisitAllChildren(this); }
 

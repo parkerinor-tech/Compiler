@@ -1,39 +1,35 @@
-#pragma once
-//**************************************
 // cVarExprNode.h
-//
-// Defines an AST node for a variable reference.
-// This is used when a variable is used in an expression.
-//
-// Inherits from cExprNode so that it can appear anywhere
-// expressions are used.
-//
-// Author: Parker Fagen
-//
-
-#include "cAstNode.h"
+#pragma once
 #include "cExprNode.h"
-//include "cVarRefNode.h"   
+#include "cSymbol.h"
 
 class cVarExprNode : public cExprNode
 {
 public:
-    // Constructor: takes a varref AST node (the variable being referenced)
-    cVarExprNode(cAstNode *varRef) : cExprNode()
+
+    // Add this constructor
+    cVarExprNode(cSymbol* sym) 
     {
-        m_varRef = varRef;
-        AddChild(m_varRef);   // add the varref as a child node
+        if(sym !=nullptr)
+            AddChild(sym);   // automatically add as child for XML
     }
 
-    virtual string NodeType() { return "var_expr"; }
-    
-    virtual string AttributesToString()
+
+    cSymbol* GetName()
     {
-        return "";  // usually variable references don't need extra attributes
+        if(NumChildren() >0)
+            return dynamic_cast<cSymbol*>(GetChild(0));
+        return nullptr;
     }
 
-    virtual void Visit(cVisitor *visitor) { visitor->Visit(this); }
+    virtual string NodeType() { return "varref"; }
+    virtual void Visit(cVisitor* visitor) { visitor->Visit(this); }
 
 protected:
-    cAstNode *m_varRef;   // pointer to the variable reference AST node
+
+    virtual string AttributesToString()
+    {
+        return "";
+    }
 };
+

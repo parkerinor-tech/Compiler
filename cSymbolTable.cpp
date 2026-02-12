@@ -1,78 +1,56 @@
-//**************************************
 // cSymbolTable.cpp
-//
-// Implementation of symbol table
-//
-//Author: Parker Fagen
-//**************************************
 #include "cSymbolTable.h"
+#include <iostream> // optional, only if you want to debug
 
-#include <unordered_map>
-#include <vector>
-#include <string>
-
-using std::string;
-using std::vector;
-
-// Each scope is a hash table
-typedef std::unordered_map<string, cSymbol *> Scope;
-
-// Stack of scopes
-static vector<Scope *> g_scopes;
-
-//**************************************************
-// Constructor
 cSymbolTable::cSymbolTable()
 {
-    IncreaseScope(); //  global scope
+    // Create global scope
+    IncreaseScope();
 }
 
-//**************************************************
 symbolTable_t *cSymbolTable::IncreaseScope()
 {
-    Scope *scope = new Scope();
-    g_scopes.push_back(scope);
-    return nullptr;
+    symbolTable_t *scope = new symbolTable_t();
+    mScopes.push_back(scope);
+    return scope;
 }
 
-//**************************************************
 symbolTable_t *cSymbolTable::DecreaseScope()
 {
-    if (g_scopes.size() > 1)
-    {
-        g_scopes.pop_back();
-    }
-    return nullptr;
+    // Never remove the global scope
+    if (mScopes.size() > 1)
+        mScopes.pop_back();
+
+    return mScopes.back();
 }
 
-//**************************************************
 void cSymbolTable::Insert(cSymbol *sym)
 {
-    Scope *current = g_scopes.back();
-    (*current)[sym->GetName()] = sym;
+    // back() returns symbolTable_t*
+    (*mScopes.back())[sym->GetName()] = sym;
 }
 
-//**************************************************
 cSymbol *cSymbolTable::Find(string name)
 {
-    for (int i = g_scopes.size() - 1; i >= 0; i--)
+    // Search from innermost scope outward
+    for (auto it = mScopes.rbegin(); it != mScopes.rend(); ++it)
     {
-        auto it = g_scopes[i]->find(name);
-        if (it != g_scopes[i]->end())
-            return it->second;
+        symbolTable_t *table = *it;
+
+        auto found = table->find(name);
+        if (found != table->end())
+            return found->second;
     }
     return nullptr;
 }
 
-//**************************************************
 cSymbol *cSymbolTable::FindLocal(string name)
 {
-    if(g_scopes.empty())
-        IncreaseScope();
-        
-    Scope *current = g_scopes.back();
-    auto it = current->find(name);
-    if (it != current->end())
-        return it->second;
+    symbolTable_t *current = mScopes.back();
+
+    auto found = current->find(name);
+    if (found != current->end())
+        return found->second;
+
     return nullptr;
-}
+}// Constructor: start with global scope

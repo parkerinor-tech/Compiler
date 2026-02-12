@@ -22,6 +22,11 @@ class cProgramNode;
 class cStmtNode;
 class cStmtsNode;
 class cSymbol;
+class cArgsNode;
+class cParamsNode;
+class cFuncHeaderNode;
+class cFuncDeclNode;
+class cFuncCallNode;
 
 class cVisitor
 {
@@ -42,4 +47,9 @@ class cVisitor
         virtual void Visit(cStmtNode *node);
         virtual void Visit(cStmtsNode *node);
         virtual void Visit(cSymbol *node);
+        virtual void Visit(cArgsNode *node);
+        virtual void Visit(cParamsNode *node);
+        virtual void Visit(cFuncHeaderNode *node);
+        virtual void Visit(cFuncDeclNode *node);
+        virtual void Visit(cFuncCallNode *node);
 };

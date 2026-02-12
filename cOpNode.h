@@ -12,67 +12,79 @@
 
 #include "cAstNode.h"
 #include "langparse.h"
+#include <string>
+
+using std::string;
 
 class cOpNode : public cAstNode
 {
-    public:
-        cOpNode(int op) : cAstNode()
+public:
+    cOpNode(int op) : m_op(op) {}
+    
+    string GetOpAsString() const
+    {
+        string result("");
+
+        switch (m_op)
         {
-            m_op = op;
+            case NOT_EQUALS:
+                result += "!=";
+                break;
+            case EQUALS:
+                result += "==";
+                break;
+            case OR:
+                result += "||";
+                break;
+            case AND:
+                result += "&&";  // Fixed: should be "&&" not "AND"
+                break;
+            case GE:
+                result += ">=";
+                break;
+            case '>':
+                result += ">";
+                break;
+            case LE:
+                result += "<=";
+                break;
+            case '<':
+                result += "<";
+                break;
+            case '+':
+                result += "+";
+                break;
+            case '-':
+                result += "-";
+                break;
+            case '*':
+                result += "*";
+                break;
+            case '/':
+                result += "/";
+                break;
+            case '%':
+                result += "%";
+                break;
+            default:
+                result += (char)m_op;
+                break;
         }
+        return result;
+    }
 
-        int GetOp() { return m_op; }
+    int GetOp() const { return m_op; }
 
-        virtual string NodeType()       { return "op"; }
-        virtual void Visit(cVisitor *visitor) { visitor->Visit(this); }
-        string GetOpAsString()
-        {
-            string result("");
+    virtual string NodeType() { return "op"; }
+    virtual void Visit(cVisitor *visitor) { visitor->Visit(this); }
+    
+protected:
+    virtual string AttributesToString()
+    {
+        return " value=\"" + GetOpAsString() + "\"";
+    }
 
-            switch (m_op)
-            {
-                case NOT_EQUALS:
-                    result += "!=";
-                    break;
-                case EQUALS:
-                    result += "==";
-                    break;
-                case OR:
-                    result += "||";
-                    break;
-                case AND:
-                    result += "AND";
-                    break;
-                case GE:
-                    result += "GE";
-                    break;
-                case '>':
-                    result += "GT";
-                    break;
-                case LE:
-                    result += "LE";
-                    break;
-                case '<':
-                    result += "LT";
-                    break;
-                default:
-                    result += (char)m_op;
-                    break;
-            }
-
-            return result;
-        }
-        virtual string AttributesToString()   
-        { 
-            string result(" value='");
-
-            result += GetOpAsString();
-
-            result += "'";
-
-            return result;
-        }
-    protected:
-        int m_op;      // the operand
+private:
+    int m_op;
 };
 

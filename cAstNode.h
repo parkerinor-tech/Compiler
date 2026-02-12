@@ -33,6 +33,9 @@ class cAstNode
         // Constructor
         cAstNode() : m_LineNum(yylineno), m_hasSemanticError(false) {}
 
+        void Add(cAstNode* child) { AddChild(child); }
+        
+        int GetNumChildren() {return NumChildren();}
     //****************************************
     // As protected, these methods are limited as to where you call them.
     // I impose an even more-strict requirement:

@@ -3,13 +3,15 @@
 // You are not required to use any of these names, but you will need the 
 // described functionality
 //
-#pragma once
+
+// NOTE: The following typedef will have to be replaced by something meaningful
+#include <unordered_map>
+#include <vector>
 #include <string>
 #include "cSymbol.h"
 
-using std::string;
-// NOTE: The following typedef will have to be replaced by something meaningful
-typedef void symbolTable_t;
+typedef std::unordered_map<std::string, cSymbol*> symbolTable_t;
+
 class cSymbolTable
 {
     public:
@@ -36,15 +38,16 @@ class cSymbolTable
         // a match is found.
         // Return the symbol for the inner-most match. 
         // Returns nullptr if no match is found.
-        cSymbol *Find(string name);
+        cSymbol *Find(std::string name);
 
         // Find a symbol in the inner-most scope.
         // NOTE: This ONLY searches the inner-most scope.
         // Returns nullptr if the symbol is not found.
-        cSymbol *FindLocal(string name);
+        cSymbol *FindLocal(std::string name);
+    private:
+        // Stack of scopes (innermost scope is back())
+        std::vector<symbolTable_t*> mScopes;
 };
 
 // declare the global symbol table. The definition will have to be in a cpp file
 extern cSymbolTable g_symbolTable;
-//extern bool g_insert;
-extern int g_insert;
