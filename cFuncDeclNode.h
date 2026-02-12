@@ -1,13 +1,17 @@
+// cFuncDeclNode.h
+// Defines an AST node representing a function declaration or definition.
+
 #pragma once
 #include "cDeclNode.h"
 #include "cFuncHeaderNode.h"
 #include "cStmtsNode.h"
 #include "cDeclsNode.h"
 
+// Represents a function prototype or full function definition
 class cFuncDeclNode : public cDeclNode
 {
 public:
-    // Prototype (header only)
+    // Constructor for function prototype (header only)
     cFuncDeclNode(cFuncHeaderNode* header)
     {
         if (header->GetType()) AddChild(header->GetType());
@@ -15,7 +19,7 @@ public:
         if (header->GetArgs()) AddChild(header->GetArgs());
     }
 
-    // Definition with decls and stmts
+    // Constructor for full definition with local declarations and statements
     cFuncDeclNode(cFuncHeaderNode* header, cDeclsNode* decls, cStmtsNode* stmts)
     {
         if (header->GetType()) AddChild(header->GetType());
@@ -25,7 +29,7 @@ public:
         if (stmts) AddChild(stmts);
     }
 
-    // Definition with stmts only
+    // Constructor for definition with statements only
     cFuncDeclNode(cFuncHeaderNode* header, cStmtsNode* stmts)
     {
         if (header->GetType()) AddChild(header->GetType());
@@ -34,6 +38,9 @@ public:
         if (stmts) AddChild(stmts);
     }
 
+    // Returns node type identifier
     virtual string NodeType() { return "func"; }
+
+    // Visitor pattern hook
     virtual void Visit(cVisitor* visitor) { visitor->Visit(this); }
 };
