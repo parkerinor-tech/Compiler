@@ -12,6 +12,14 @@
 #include "astnodes.h"
 #include "cSymbolTable.h"
 
+// Flag set when a semantic error occurs in an AST node constructor
+static bool g_semanticErrorHappened = false;
+
+#define CHECK_ERROR() { if (g_semanticErrorHappened) \
+    { g_semanticErrorHappened = false; } }
+#define PROP_ERROR() { if (g_semanticErrorHappened) \
+    { g_semanticErrorHappened = false; YYERROR; } }
+    
 %}
 
 %locations
@@ -62,6 +70,12 @@
 
     cAstNode *yyast_root;
 %}
+
+// Macros for semantic error handling:
+// CHECK_ERROR - note the error but continue parsing
+// PROP_ERROR  - note the error AND trigger bison error recovery
+
+
 
 %start  program
 
@@ -140,25 +154,50 @@ decls:      decls decl
         |   decl
                                 { $$ = new cDeclsNode($1);  }
 decl:       var_decl ';'
-                                { $$ = $1; }
+                                { $$ = $1; PROP_ERROR(); }
         |   array_decl ';'
-                            {  }
+                            { $$ = dynamic_cast<cDeclNode*>($1); }
         |   struct_decl ';'
-                            {  }
+                            { $$ = dynamic_cast<cDeclNode*>($1); }
         |   func_decl
-                            {  }
+                            { $$ = dynamic_cast<cDeclNode*>($1); }
 
 var_decl:   TYPE_ID IDENTIFIER
-        { $$ = new cVarDeclNode($1, $2); }
+        { $$ = new cVarDeclNode($1, $2); PROP_ERROR(); }
 
 struct_decl:  STRUCT open decls close IDENTIFIER
                                 { 
-                                    $5->SetIsType(true);
-                                    g_symbolTable.Insert($5);
+                                    // Check for duplicate before inserting
+                                    if (g_symbolTable.FindLocal($5->GetName()) != nullptr)
+                                    {
+                                        SemanticParseError("Symbol " + $5->GetName() +
+                                            " already defined in current scope");
+                                    }
+                                    else
+                                    {
+                                        cStructDeclNode* sd = new cStructDeclNode($3, $5);
+                                        $5->SetDecl(sd);
+                                        g_symbolTable.Insert($5);
+                                    }
                                     $$ = new cStructDeclNode($3,$5);
+                                    PROP_ERROR();
                                 }
 array_decl:   ARRAY TYPE_ID '[' INT_VAL ']' IDENTIFIER
-                                {  $6->SetIsType(true); g_symbolTable.Insert($6); $$ = new cArrayDeclNode($2, $6, $4); }
+                                {
+                                    if (g_symbolTable.FindLocal($6->GetName()) != nullptr)
+                                    {
+                                        SemanticParseError("Symbol " + $6->GetName() +
+                                            " already defined in current scope");
+                                    }
+                                    else
+                                    {
+                                        cArrayDeclNode* ad = new cArrayDeclNode($2, $6, $4);
+                                        $6->SetDecl(ad);
+                                        g_symbolTable.Insert($6);
+                                        $$ = ad;
+                                    }
+                                    PROP_ERROR();
+                                }
 
 func_decl:  func_header ';'
                                 { g_symbolTable.DecreaseScope(); $$ = new cFuncDeclNode(dynamic_cast<cFuncHeaderNode*>($1)); }
@@ -182,13 +221,11 @@ paramspec:  var_decl
 
 stmts: stmts stmt
 {
-    // Add $2 (stmt) to existing list of statements ($1)
     $$ = $1;
     $$->Add($2);
 }
         | stmt
 {
-    // First statement → create new cStmtsNode
     $$ = new cStmtsNode($1);
 }
 
@@ -205,13 +242,12 @@ stmt:       IF '(' expr ')' stmts ENDIF ';'
         |   lval '=' expr ';'
                             { $$ = new cAssignNode(dynamic_cast<cVarExprNode*>($1), $3); }
         |   func_call ';'
-                            {  }
+                            { $$ = dynamic_cast<cStmtNode*>($1); }
         |   block
                             { $$ = $1; }
         |   RETURN expr ';'
             { 
                 $$ = new cReturnNode($2);
-                 
             }
         |   error ';'
                             {}
@@ -223,7 +259,7 @@ func_call:  IDENTIFIER '(' params ')'
 
 varref: IDENTIFIER
       {
-            $$ = new cVarExprNode($1);
+            $$ = new cVarExprNode($1); CHECK_ERROR();
       }
     |   varref '.' IDENTIFIER
       {
@@ -237,9 +273,6 @@ varref: IDENTIFIER
       }
     ;
 
-
-
-
 lval:     varref
                                 { $$ = $1; }
 
@@ -252,77 +285,46 @@ param:      expr
                                 { $$ = $1; }
 
 expr:       expr EQUALS addit
-{
-    $$ = new cBinaryExprNode($1, new cOpNode(EQUALS), $3);
-}
+{ $$ = new cBinaryExprNode($1, new cOpNode(EQUALS), $3); }
     |   expr NOT_EQUALS addit
-{
-    $$ = new cBinaryExprNode($1, new cOpNode(NOT_EQUALS), $3);
-}
+{ $$ = new cBinaryExprNode($1, new cOpNode(NOT_EQUALS), $3); }
     |   expr '<' addit
-{
-    $$ = new cBinaryExprNode($1, new cOpNode('<'), $3);
-}
+{ $$ = new cBinaryExprNode($1, new cOpNode('<'), $3); }
     |   expr '>' addit
-{
-    $$ = new cBinaryExprNode($1, new cOpNode('>'), $3);
-}
+{ $$ = new cBinaryExprNode($1, new cOpNode('>'), $3); }
     |   expr LE addit
-{
-    $$ = new cBinaryExprNode($1, new cOpNode(LE), $3);
-}
+{ $$ = new cBinaryExprNode($1, new cOpNode(LE), $3); }
     |   expr GE addit
-{
-    $$ = new cBinaryExprNode($1, new cOpNode(GE), $3);
-}
+{ $$ = new cBinaryExprNode($1, new cOpNode(GE), $3); }
     |   expr AND addit
-{
-    $$ = new cBinaryExprNode($1, new cOpNode(AND), $3);
-}
+{ $$ = new cBinaryExprNode($1, new cOpNode(AND), $3); }
     |   expr OR addit
-{
-    $$ = new cBinaryExprNode($1, new cOpNode(OR), $3);
-}
-|   addit
-{
-    $$ = $1;
-}
+{ $$ = new cBinaryExprNode($1, new cOpNode(OR), $3); }
+    |   addit
+{ $$ = $1; }
+
 addit: addit '+' term
-{
-    $$ = new cBinaryExprNode($1, new cOpNode('+'), $3);
-}
+{ $$ = new cBinaryExprNode($1, new cOpNode('+'), $3); }
         | addit '-' term
-{
-    $$ = new cBinaryExprNode($1, new cOpNode('-'), $3);
-}
+{ $$ = new cBinaryExprNode($1, new cOpNode('-'), $3); }
         | term
-{
-    $$ = $1;
-};
+{ $$ = $1; };
 
 term: term '*' fact
-{
-    $$ = new cBinaryExprNode($1, new cOpNode('*'), $3);
-}
+{ $$ = new cBinaryExprNode($1, new cOpNode('*'), $3); }
 | term '/' fact
-{
-    $$ = new cBinaryExprNode($1, new cOpNode('/'), $3);
-}
+{ $$ = new cBinaryExprNode($1, new cOpNode('/'), $3); }
 | term '%' fact
-{
-    $$ = new cBinaryExprNode($1, new cOpNode('%'), $3);
-}
+{ $$ = new cBinaryExprNode($1, new cOpNode('%'), $3); }
 | fact
-{
-    $$ = $1;
-};
+{ $$ = $1; };
 
 fact:       '(' expr ')'
                                 { $$ = $2; }
         |   INT_VAL
                             { $$ = new cIntExprNode($1); }
         |   FLOAT_VAL
-                            { $$ = new cFloatExprNode($1);  }
+                            { $$ = new cFloatExprNode($1); }
         |   varref
                             { $$ = $1; }
         |   func_call
@@ -337,4 +339,13 @@ int yyerror(const char *msg)
         << yytext << " on line " << yylineno << "\n";
 
     return 0;
+}
+
+// Function that gets called when a semantic error happens during parsing
+void SemanticParseError(std::string error)
+{
+    std::cout << "ERROR: " << error << " near line "
+              << yylineno << "\n";
+    g_semanticErrorHappened = true;
+    yynerrs++;
 }

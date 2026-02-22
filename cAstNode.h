@@ -194,3 +194,4 @@ class cAstNode
         bool m_hasSemanticError;
 };
 
+void SemanticParseError(string error);

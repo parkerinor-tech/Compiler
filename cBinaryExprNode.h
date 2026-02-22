@@ -1,17 +1,10 @@
-// cBinaryExprNode.h
-// Defines an AST node representing a binary expression (e.g., a + b).
-
 #pragma once
 #include "cExprNode.h"
 #include "cOpNode.h"
 
-// Represents a binary expression with a left operand, operator, and right operand
 class cBinaryExprNode : public cExprNode
 {
 public:
-    // lhs = left expression
-    // op  = operator node
-    // rhs = right expression
     cBinaryExprNode(cExprNode* lhs, cOpNode* op, cExprNode* rhs)
     {
         AddChild(lhs);
@@ -19,9 +12,14 @@ public:
         AddChild(rhs);
     }
 
-    // Returns node type identifier
-    virtual string NodeType() { return "expr"; }
+    // Return the type of the left-hand side expression
+    virtual cDeclNode* GetType() override
+    {
+        cExprNode* lhs = dynamic_cast<cExprNode*>(GetChild(0));
+        if (lhs != nullptr) return lhs->GetType();
+        return nullptr;
+    }
 
-    // Visitor pattern hook
+    virtual string NodeType() { return "expr"; }
     virtual void Visit(cVisitor* visitor) { visitor->Visit(this); }
 };

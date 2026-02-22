@@ -2,12 +2,9 @@
 // main.cpp
 //
 // Main routine for lang compiler.
-// This version only runs the lexer
 //
 // Author: Phil Howard 
 // phil.howard@oit.edu
-//
-// Date: Nov. 23, 2015
 //
 #include <stdio.h>
 #include <stdlib.h>
@@ -16,26 +13,18 @@
 #include <fstream>
 #include "cSymbol.h"
 #include "cSymbolTable.h"
+#include "cBaseTypeNode.h"
 #include "lex.h"
 #include "astnodes.h"
 #include "langparse.h"
 
-// Uncomment the following line after integrating your symbol table with
-// your scanner.
 #define TEST2
-
-//****************************************
-// argv[1] contains the file to process
-// argv[2] if given, contains the name of the output file
 
 int g_insert = false;
 cSymbolTable g_symbolTable;
-long long cSymbol::nextId;
 
 int main(int argc, char **argv)
 {
-    //std::cout << "Parker Fagen" << std::endl;
-
     const char *outfile_name;
     int result = 0;
     int token;
@@ -69,35 +58,44 @@ int main(int argc, char **argv)
     }
 
     if (argc > 3) do_test2 = 1;
-    // Add standard types to the outermost scope
-    // In main(), before yyparse():
-// Insert and mark standard types as types
+
+    // Add standard types to the outermost scope using cBaseTypeNode
+    // cBaseTypeNode(name, size, isFloat)
+    // char:   size=1, not float
+    // int:    size=4, not float
+    // float:  size=4, is float
+    // long:   size=8, not float
+    // double: size=8, is float
     cSymbol* char_sym = new cSymbol("char");
-char_sym->SetIsType(true);
-g_symbolTable.Insert(char_sym);
+    char_sym->SetDecl(new cBaseTypeNode("char", 1, false));
+    g_symbolTable.Insert(char_sym);
 
-cSymbol* int_sym = new cSymbol("int");
-int_sym->SetIsType(true);
-g_symbolTable.Insert(int_sym);
+    cSymbol* int_sym = new cSymbol("int");
+    int_sym->SetDecl(new cBaseTypeNode("int", 4, false));
+    g_symbolTable.Insert(int_sym);
 
-cSymbol* float_sym = new cSymbol("float");
-float_sym->SetIsType(true);
-g_symbolTable.Insert(float_sym);
+    cSymbol* float_sym = new cSymbol("float");
+    float_sym->SetDecl(new cBaseTypeNode("float", 4, true));
+    g_symbolTable.Insert(float_sym);
 
-cSymbol* long_sym = new cSymbol("long");
-long_sym->SetIsType(true);
-g_symbolTable.Insert(long_sym);
+    cSymbol* long_sym = new cSymbol("long");
+    long_sym->SetDecl(new cBaseTypeNode("long", 8, false));
+    g_symbolTable.Insert(long_sym);
 
-cSymbol* double_sym = new cSymbol("double");
-double_sym->SetIsType(true);
-g_symbolTable.Insert(double_sym);
-result = yyparse();
+    cSymbol* double_sym = new cSymbol("double");
+    double_sym->SetDecl(new cBaseTypeNode("double", 8, true));
+    g_symbolTable.Insert(double_sym);
+
+    result = yyparse();
+
     if (yyast_root != nullptr)
     {
         if (result == 0)
         {
             std::cout << yyast_root->ToString();
-        } else {
+        }
+        else
+        {
             std::cout << " Errors in compile\n";
         }
     }
@@ -130,4 +128,3 @@ result = yyparse();
 
     return result;
 }
-

@@ -1,10 +1,7 @@
+#pragma once
 //****************************************************
 // Starter code for a symbol table definition.
-// You are not required to use any of these names, but you will need the 
-// described functionality
 //
-
-// NOTE: The following typedef will have to be replaced by something meaningful
 #include <unordered_map>
 #include <vector>
 #include <string>
@@ -44,6 +41,7 @@ class cSymbolTable
         // NOTE: This ONLY searches the inner-most scope.
         // Returns nullptr if the symbol is not found.
         cSymbol *FindLocal(std::string name);
+
     private:
         // Stack of scopes (innermost scope is back())
         std::vector<symbolTable_t*> mScopes;

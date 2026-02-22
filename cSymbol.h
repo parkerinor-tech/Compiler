@@ -1,52 +1,50 @@
-// cSymbol.h
+#pragma once
 //********************************************************
-// Defines a class representing symbols in the AST (identifiers, types, etc.)
+// cSymbol.h - Define a class for symbols
 //
 // Author: Philip Howard
 //
-
-#pragma once
 #include <string>
-#include "cAstNode.h"
-
 using std::string;
 
-// Represents a symbol with a name, unique ID, and optional type flag
+#include "cAstNode.h"
+
+// Forward declaration to avoid circular includes
+class cDeclNode;
+
 class cSymbol : public cAstNode
 {
-public:
-    // Construct a symbol given its name
-    cSymbol(string name) : cAstNode()
-    {
-        m_id = ++nextId;    // Assign a unique ID
-        m_name = name;      // Store symbol name
-        m_isType = false;   // Default: not a type
-    }
+    public:
+        // Construct a symbol given its name
+        cSymbol(string name) : cAstNode()
+        {
+            m_id = ++nextId;
+            m_name = name;
+            m_decl = nullptr;
+        }
 
-    // Return string representation of attributes for debugging/output
-    virtual string AttributesToString() override
-    {
-        string result(" id=\"");
-        result += std::to_string(m_id);
-        result += "\" name=\"" + m_name + "\"";
-        return result;
-    }
+        virtual string AttributesToString() override
+        {
+            string result(" id=\"");
+            result += std::to_string(m_id);
+            result += "\" name=\"" + m_name + "\"";
+            return result;
+        }
 
-    // Accessors
-    string GetName() { return m_name; }
-    long long GetId() { return m_id; }
-    bool GetIsType() const { return m_isType; }
-    void SetIsType(bool isType) { m_isType = isType; }
+        // Return name and ID of symbol
+        string    GetName() { return m_name; }
+        long long GetId()   { return m_id; }
 
-    // AST node type identifier
-    virtual string NodeType() override { return string("sym"); }
+        virtual string NodeType() override { return string("sym"); }
+        virtual void Visit(cVisitor *visitor) override { visitor->Visit(this); }
 
-    // Visitor pattern hook
-    virtual void Visit(cVisitor* visitor) override { visitor->Visit(this); }
+        // Set/get the declaration node associated with this symbol
+        void       SetDecl(cDeclNode* decl) { m_decl = decl; }
+        cDeclNode* GetDecl() const          { return m_decl; }
 
-protected:
-    static long long nextId;  // Tracks unique symbol IDs across all symbols
-    long long m_id;            // Unique ID for this symbol
-    string m_name;             // Symbol name
-    bool m_isType;             // Flag indicating if this symbol represents a type
+    protected:
+        static long long nextId;    // keeps track of unique symbol IDs
+        long long m_id;             // Unique ID for this symbol
+        string    m_name;           // Symbol name
+        cDeclNode* m_decl;          // Declaration node for this symbol
 };

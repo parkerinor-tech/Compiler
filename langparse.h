@@ -45,7 +45,7 @@
 extern int yydebug;
 #endif
 /* "%code requires" blocks.  */
-#line 19 "lang.y"
+#line 27 "lang.y"
 
     class cVarDeclNode;
     class cDeclNode;
@@ -107,7 +107,7 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 40 "lang.y"
+#line 48 "lang.y"
 
     int             int_val;
     float           float_val;

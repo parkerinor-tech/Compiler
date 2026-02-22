@@ -1,27 +1,30 @@
-// cVarExprNode.h
-//********************************************************
-// Defines an AST node representing a variable reference in an expression.
-//
-// Example: x in "x + 5"
-//
-
 #pragma once
+//**************************************
+// cVarExprNode.h
+//
+// Checks that a referenced variable has been declared.
+//
 #include "cExprNode.h"
 #include "cSymbol.h"
+#include "cSymbolTable.h"
 
-// Represents a reference to a variable
 class cVarExprNode : public cExprNode
 {
 public:
-    // Constructor: sym = symbol for the variable
-    // Automatically adds symbol as child for tree structure / XML output
     cVarExprNode(cSymbol* sym)
     {
         if (sym != nullptr)
+        {
+            // Check that the symbol has been declared (has a decl)
+            cSymbol* found = g_symbolTable.Find(sym->GetName());
+            if (found == nullptr || found->GetDecl() == nullptr)
+            {
+                SemanticParseError("Symbol " + sym->GetName() + " not defined");
+            }
             AddChild(sym);
+        }
     }
 
-    // Returns the variable's symbol (name)
     cSymbol* GetName()
     {
         if (NumChildren() > 0)
@@ -29,16 +32,17 @@ public:
         return nullptr;
     }
 
-    // Returns node type identifier
-    virtual string NodeType() { return "varref"; }
+    virtual cDeclNode* GetType() override
+    {
+        cSymbol* sym = GetName();
+        if (sym != nullptr && sym->GetDecl() != nullptr)
+            return sym->GetDecl()->GetType();
+        return nullptr;
+    }
 
-    // Visitor pattern hook
+    virtual string NodeType() { return "varref"; }
     virtual void Visit(cVisitor* visitor) { visitor->Visit(this); }
 
 protected:
-    // No additional attributes for XML
-    virtual string AttributesToString()
-    {
-        return "";
-    }
+    virtual string AttributesToString() { return ""; }
 };
