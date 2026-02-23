@@ -37,9 +37,29 @@ public:
     virtual bool IsFunc() override { return true; }
 
     // Get the name symbol (child index 1)
-    cSymbol* GetName()
+    cSymbol* GetNameSymbol()
     {
         return dynamic_cast<cSymbol*>(GetChild(1));
+    }
+
+    // Get the name as a string (satisfies cDeclNode::GetName() pure virtual)
+    virtual string GetName() override
+    {
+        cSymbol* sym = dynamic_cast<cSymbol*>(GetChild(1));
+        if (sym != nullptr) return sym->GetName();
+        return "";
+    }
+
+    // Returns true if this function has a body (stmts defined)
+    // A func with only a prototype has 2-3 children (type, name, [args])
+    // A func with a body has stmts as the last child
+    bool HasBody()
+    {
+        for (int i = 0; i < GetNumChildren(); i++)
+        {
+            if (dynamic_cast<cStmtsNode*>(GetChild(i)) != nullptr) return true;
+        }
+        return false;
     }
 
     // Get the args node (child index 2) for parameter count comparison

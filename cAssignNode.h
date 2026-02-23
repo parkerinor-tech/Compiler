@@ -1,5 +1,3 @@
-
-
 // cAssignNode.h
 // Defines an AST node representing an assignment statement.
 
@@ -22,6 +20,10 @@ public:
 
     // Returns node type identifier
     virtual string NodeType() { return "assign"; }
+
+    // Getters for lhs and rhs
+    cVarExprNode* GetLhs() { return dynamic_cast<cVarExprNode*>(GetChild(0)); }
+    cExprNode*    GetRhs() { return dynamic_cast<cExprNode*>(GetChild(1)); }
 
     // Visitor pattern hook
     virtual void Visit(cVisitor* visitor) { visitor->Visit(this); }

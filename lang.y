@@ -180,7 +180,8 @@ struct_decl:  STRUCT open decls close IDENTIFIER
                                 }
 array_decl:   ARRAY TYPE_ID '[' INT_VAL ']' IDENTIFIER
                                 {
-                                    if (g_symbolTable.FindLocal($6->GetName()) != nullptr)
+                                    cSymbol* existing = g_symbolTable.FindLocal($6->GetName());
+                                    if (existing != nullptr && existing->GetDecl() != nullptr)
                                     {
                                         SemanticParseError("Symbol " + $6->GetName() +
                                             " already defined in current scope");
@@ -188,8 +189,13 @@ array_decl:   ARRAY TYPE_ID '[' INT_VAL ']' IDENTIFIER
                                     else
                                     {
                                         cArrayDeclNode* ad = new cArrayDeclNode($2, $6, $4);
-                                        $6->SetDecl(ad);
-                                        g_symbolTable.Insert($6);
+                                        if (existing != nullptr)
+                                            existing->SetDecl(ad);
+                                        else
+                                        {
+                                            $6->SetDecl(ad);
+                                            g_symbolTable.Insert($6);
+                                        }
                                         $$ = ad;
                                     }
                                     CHECK_ERROR();
@@ -238,7 +244,7 @@ func_decl:  func_header ';'
                                         header->SetName(existing);
                                     else if (existing != nullptr && existing->GetDecl() != nullptr && existing->GetDecl()->IsFunc())
                                     {
-                                        cSymbol* origName = dynamic_cast<cFuncDeclNode*>(existing->GetDecl())->GetName();
+                                        cSymbol* origName = dynamic_cast<cFuncDeclNode*>(existing->GetDecl())->GetNameSymbol();
                                         if (origName != nullptr) header->SetName(origName);
                                     }
                                     cFuncDeclNode* fd = new cFuncDeclNode(header);
@@ -307,7 +313,7 @@ func_decl:  func_header ';'
                                         header->SetName(existing);
                                     else if (existing != nullptr && existing->GetDecl() != nullptr && existing->GetDecl()->IsFunc())
                                     {
-                                        cSymbol* origName = dynamic_cast<cFuncDeclNode*>(existing->GetDecl())->GetName();
+                                        cSymbol* origName = dynamic_cast<cFuncDeclNode*>(existing->GetDecl())->GetNameSymbol();
                                         if (origName != nullptr) header->SetName(origName);
                                     }
                                     cFuncDeclNode* fd = new cFuncDeclNode(header, $3, $4);
@@ -372,7 +378,7 @@ func_decl:  func_header ';'
                                         header->SetName(existing);
                                     else if (existing != nullptr && existing->GetDecl() != nullptr && existing->GetDecl()->IsFunc())
                                     {
-                                        cSymbol* origName = dynamic_cast<cFuncDeclNode*>(existing->GetDecl())->GetName();
+                                        cSymbol* origName = dynamic_cast<cFuncDeclNode*>(existing->GetDecl())->GetNameSymbol();
                                         if (origName != nullptr) header->SetName(origName);
                                     }
                                     cFuncDeclNode* fd = new cFuncDeclNode(header, $3);
@@ -535,6 +541,8 @@ fact:       '(' expr ')'
                             { $$ = $1; }
         |   func_call
                             { $$ = $1; }
+        |   '-' fact
+                            { $$ = new cUnaryExprNode(new cOpNode('-'), $2); }
 
 %%
 

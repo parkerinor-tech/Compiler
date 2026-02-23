@@ -54,3 +54,23 @@ cSymbol *cSymbolTable::FindLocal(string name)
 
     return nullptr;
 }// Constructor: start with global scope
+
+// Forward declaration for InitRootTable
+#include "cBaseTypeNode.h"
+
+void cSymbolTable::InitRootTable()
+{
+    auto insertType = [this](const string& name, int size, bool isFloat) {
+        cSymbol* sym = new cSymbol(name);
+        sym->SetDecl(new cBaseTypeNode(name, size, isFloat));
+        Insert(sym);
+    };
+
+    insertType("char",   1, false);
+    insertType("int",    4, false);
+    insertType("float",  4, true);
+    insertType("long",   8, false);
+    insertType("double", 8, true);
+}
+// Global symbol table instance (declared extern in cSymbolTable.h)
+cSymbolTable g_symbolTable;

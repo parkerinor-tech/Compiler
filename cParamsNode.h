@@ -14,6 +14,9 @@ public:
         if (param != nullptr) AddChild(param);
     }
 
+    // Public getter for children (used by cSemantics visitor)
+    cAstNode* GetChildNode(int index) { return cAstNode::GetChild(index); }
+
     // Returns node type identifier
     virtual string NodeType() { return "params"; }
 

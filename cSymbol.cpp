@@ -1,4 +1,3 @@
 #include "cSymbol.h"
 
-// Define the static member
-long long cSymbol::nextId = 0;
+// NOTE: cSymbol::nextId is defined in main.cpp

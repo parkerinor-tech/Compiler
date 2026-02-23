@@ -45,6 +45,9 @@ class cSymbolTable
         // Return the current (innermost) scope directly
         symbolTable_t *GetCurrentScope() { return mScopes.back(); }
 
+        // Populate root scope with built-in types (char, int, float, long, double)
+        void InitRootTable();
+
         // Return the parent (second innermost) scope, or null if only one scope
         symbolTable_t *GetParentScope()
         {
@@ -69,3 +72,5 @@ class cSymbolTable
 
 // declare the global symbol table. The definition will have to be in a cpp file
 extern cSymbolTable g_symbolTable;
+// Alias for compatibility with new main.cpp
+#define g_SymbolTable g_symbolTable

@@ -16,6 +16,14 @@ public:
     virtual bool IsStruct() override { return true; }
     virtual bool IsType()   override { return true; }
 
+    virtual string GetName() override
+    {
+        // child[1] is the name symbol
+        cSymbol* sym = dynamic_cast<cSymbol*>(GetChild(1));
+        if (sym != nullptr) return sym->GetName();
+        return "";
+    }
+
     virtual cDeclNode* GetType() override { return this; }
 
     virtual string NodeType() { return "struct_decl"; }

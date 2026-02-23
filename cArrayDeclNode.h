@@ -14,6 +14,15 @@ public:
     }
 
     virtual bool IsArray() override { return true; }
+    virtual bool IsType()  override { return true; }
+
+    virtual string GetName() override
+    {
+        // child[1] is the name symbol
+        cSymbol* sym = dynamic_cast<cSymbol*>(GetChild(1));
+        if (sym != nullptr) return sym->GetName();
+        return "";
+    }
 
     // The type of an array is the type of its element type symbol
     virtual cDeclNode* GetType() override

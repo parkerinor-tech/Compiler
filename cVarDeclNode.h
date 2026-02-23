@@ -46,6 +46,19 @@ public:
 
     virtual bool IsVar() override { return true; }
 
+    virtual bool IsArray() override 
+    { 
+        return m_type != nullptr && 
+               m_type->GetDecl() != nullptr && 
+               m_type->GetDecl()->IsArray(); 
+    }
+
+    virtual string GetName() override
+    {
+        if (m_name != nullptr) return m_name->GetName();
+        return "";
+    }
+
     virtual cDeclNode* GetType() override
     {
         if (m_type != nullptr && m_type->GetDecl() != nullptr)

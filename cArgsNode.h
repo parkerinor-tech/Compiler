@@ -9,6 +9,9 @@ public:
         if (arg != nullptr) AddChild(arg);
     }
 
+    // Public getter for children (used by cSemantics visitor)
+    cAstNode* GetChildNode(int index) { return cAstNode::GetChild(index); }
+
     virtual string NodeType() { return "args"; }
     virtual void Visit(cVisitor* visitor) { visitor->Visit(this); }
 };

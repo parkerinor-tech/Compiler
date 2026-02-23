@@ -7,8 +7,6 @@
 // Author: Phil Howard 
 // phil.howard@oit.edu
 //
-// Date: Jan. 18, 2016
-//
 
 #include "cAstNode.h"
 #include "langparse.h"
@@ -23,54 +21,23 @@ public:
     
     string GetOpAsString() const
     {
-        string result("");
-
         switch (m_op)
         {
-            case NOT_EQUALS:
-                result += "!=";
-                break;
-            case EQUALS:
-                result += "==";
-                break;
-            case OR:
-                result += "||";
-                break;
-            case AND:
-                result += "&&";  // Fixed: should be "&&" not "AND"
-                break;
-            case GE:
-                result += ">=";
-                break;
-            case '>':
-                result += ">";
-                break;
-            case LE:
-                result += "<=";
-                break;
-            case '<':
-                result += "<";
-                break;
-            case '+':
-                result += "+";
-                break;
-            case '-':
-                result += "-";
-                break;
-            case '*':
-                result += "*";
-                break;
-            case '/':
-                result += "/";
-                break;
-            case '%':
-                result += "%";
-                break;
-            default:
-                result += (char)m_op;
-                break;
+            case NOT_EQUALS: return "!=";
+            case EQUALS:     return "==";
+            case OR:         return "||";
+            case AND:        return "&amp;&amp;";
+            case GE:         return ">=";
+            case '>':        return ">";
+            case LE:         return "&lt;=";
+            case '<':        return "&lt;";
+            case '+':        return "+";
+            case '-':        return "-";
+            case '*':        return "*";
+            case '/':        return "/";
+            case '%':        return "%";
+            default:         return string(1, (char)m_op);
         }
-        return result;
     }
 
     int GetOp() const { return m_op; }
@@ -87,4 +54,3 @@ protected:
 private:
     int m_op;
 };
-

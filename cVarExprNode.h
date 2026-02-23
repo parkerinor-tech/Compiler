@@ -41,6 +41,9 @@ public:
         return nullptr;
     }
 
+    // Public getter for children (used by cSemantics visitor)
+    cAstNode* GetChildNode(int index) { return cExprNode::GetChild(index); }
+
     virtual string NodeType() { return "varref"; }
     virtual void Visit(cVisitor* visitor) { visitor->Visit(this); }
 
