@@ -204,6 +204,7 @@ func_decl:  func_header ';'
                                     {
                                         if (!existing->GetDecl()->IsFunc())
                                         {
+                                            // Non-func already in parent scope = duplicate in same block
                                             SemanticParseError("Symbol " + nameSym->GetName() +
                                                 " already defined in current scope", header->GetLineNum());
                                         }
@@ -228,35 +229,35 @@ func_decl:  func_header ';'
                                                 SemanticParseError(nameSym->GetName() +
                                                     " redeclared with a different number of parameters", header->GetLineNum());
                                             }
-                                            // Reuse existing symbol for same-named function
-                                            (*g_symbolTable.GetParentScope())[nameSym->GetName()] = existing;
                                         }
                                     }
-                                    // If conflicting with non-func in parent, create fresh symbol first
-                                    if (existing != nullptr && existing->GetDecl() != nullptr &&
-                                        !existing->GetDecl()->IsFunc())
+                                    // If existing is the outer non-func var, force header to show it in XML.
+                                    // If existing is already a func, use its stored name symbol (from first declaration).
+                                    // Do NOT use nameSym which may be a newer inner-scope symbol.
+                                    if (existing != nullptr && (existing->GetDecl() == nullptr || !existing->GetDecl()->IsFunc()))
+                                        header->SetName(existing);
+                                    else if (existing != nullptr && existing->GetDecl() != nullptr && existing->GetDecl()->IsFunc())
                                     {
-                                        cSymbol* fresh = new cSymbol(nameSym->GetName());
-                                        header->SetName(fresh);
-                                        nameSym = fresh;
+                                        cSymbol* origName = dynamic_cast<cFuncDeclNode*>(existing->GetDecl())->GetName();
+                                        if (origName != nullptr) header->SetName(origName);
                                     }
                                     cFuncDeclNode* fd = new cFuncDeclNode(header);
-                                    if (existing == nullptr || existing->GetDecl() == nullptr)
+                                    if (existing != nullptr && existing->GetDecl() != nullptr && existing->GetDecl()->IsFunc())
                                     {
-                                        // First declaration - use the symbol as-is
-                                        nameSym->SetDecl(fd);
-                                        (*g_symbolTable.GetParentScope())[nameSym->GetName()] = nameSym;
-                                    }
-                                    else if (existing->GetDecl()->IsFunc())
-                                    {
-                                        // Reuse the existing decl node so stmts are preserved in XML
+                                        // Re-declaration of a func: reuse existing decl so stmts are preserved in XML
                                         fd = dynamic_cast<cFuncDeclNode*>(existing->GetDecl());
+                                        existing->SetDecl(fd);
+                                        (*g_symbolTable.GetParentScope())[existing->GetName()] = existing;
                                     }
-                                    else
+                                    else if (!g_semanticErrorHappened)
                                     {
-                                        // Conflict with non-func - fresh symbol already set above
-                                        nameSym->SetDecl(fd);
-                                        (*g_symbolTable.GetParentScope())[nameSym->GetName()] = nameSym;
+                                        // nameSym has a non-func decl (outer var): create fresh symbol for inner scope.
+                                        // Otherwise nameSym is bare (no decl): use it directly.
+                                        cSymbol* reg = (nameSym->GetDecl() != nullptr && !nameSym->GetDecl()->IsFunc())
+                                            ? new cSymbol(nameSym->GetName())
+                                            : nameSym;
+                                        reg->SetDecl(fd);
+                                        (*g_symbolTable.GetParentScope())[reg->GetName()] = reg;
                                     }
                                     g_symbolTable.DecreaseScope();
                                     $$ = fd;
@@ -300,20 +301,28 @@ func_decl:  func_header ';'
                                                 SemanticParseError(nameSym->GetName() +
                                                     " already has a definition");
                                             }
-                                            (*g_symbolTable.GetParentScope())[nameSym->GetName()] = existing;
                                         }
                                     }
-                                    cFuncDeclNode* fd = new cFuncDeclNode(header, $3, $4);
-                                    if (existing == nullptr || existing->GetDecl() == nullptr)
+                                    if (existing != nullptr && (existing->GetDecl() == nullptr || !existing->GetDecl()->IsFunc()))
+                                        header->SetName(existing);
+                                    else if (existing != nullptr && existing->GetDecl() != nullptr && existing->GetDecl()->IsFunc())
                                     {
-                                        nameSym->SetDecl(fd);
-                                        (*g_symbolTable.GetParentScope())[nameSym->GetName()] = nameSym;
+                                        cSymbol* origName = dynamic_cast<cFuncDeclNode*>(existing->GetDecl())->GetName();
+                                        if (origName != nullptr) header->SetName(origName);
                                     }
-                                    else if (existing->GetDecl()->IsFunc() && !g_semanticErrorHappened)
+                                    cFuncDeclNode* fd = new cFuncDeclNode(header, $3, $4);
+                                    if (existing != nullptr && existing->GetDecl() != nullptr && existing->GetDecl()->IsFunc() && !g_semanticErrorHappened)
                                     {
-                                        // Update the existing symbol to point to this definition
-                                        // so subsequent prototypes can find the body
                                         existing->SetDecl(fd);
+                                        (*g_symbolTable.GetParentScope())[existing->GetName()] = existing;
+                                    }
+                                    else if (!g_semanticErrorHappened)
+                                    {
+                                        cSymbol* reg = (nameSym->GetDecl() != nullptr && !nameSym->GetDecl()->IsFunc())
+                                            ? new cSymbol(nameSym->GetName())
+                                            : nameSym;
+                                        reg->SetDecl(fd);
+                                        (*g_symbolTable.GetParentScope())[reg->GetName()] = reg;
                                     }
                                     g_symbolTable.DecreaseScope();
                                     $$ = fd;
@@ -357,19 +366,28 @@ func_decl:  func_header ';'
                                                 SemanticParseError(nameSym->GetName() +
                                                     " already has a definition");
                                             }
-                                            (*g_symbolTable.GetParentScope())[nameSym->GetName()] = existing;
                                         }
                                     }
-                                    cFuncDeclNode* fd = new cFuncDeclNode(header, $3);
-                                    if (existing == nullptr || existing->GetDecl() == nullptr)
+                                    if (existing != nullptr && (existing->GetDecl() == nullptr || !existing->GetDecl()->IsFunc()))
+                                        header->SetName(existing);
+                                    else if (existing != nullptr && existing->GetDecl() != nullptr && existing->GetDecl()->IsFunc())
                                     {
-                                        nameSym->SetDecl(fd);
-                                        (*g_symbolTable.GetParentScope())[nameSym->GetName()] = nameSym;
+                                        cSymbol* origName = dynamic_cast<cFuncDeclNode*>(existing->GetDecl())->GetName();
+                                        if (origName != nullptr) header->SetName(origName);
                                     }
-                                    else if (existing->GetDecl()->IsFunc() && !g_semanticErrorHappened)
+                                    cFuncDeclNode* fd = new cFuncDeclNode(header, $3);
+                                    if (existing != nullptr && existing->GetDecl() != nullptr && existing->GetDecl()->IsFunc() && !g_semanticErrorHappened)
                                     {
-                                        // Update the existing symbol to point to this definition
                                         existing->SetDecl(fd);
+                                        (*g_symbolTable.GetParentScope())[existing->GetName()] = existing;
+                                    }
+                                    else if (!g_semanticErrorHappened)
+                                    {
+                                        cSymbol* reg = (nameSym->GetDecl() != nullptr && !nameSym->GetDecl()->IsFunc())
+                                            ? new cSymbol(nameSym->GetName())
+                                            : nameSym;
+                                        reg->SetDecl(fd);
+                                        (*g_symbolTable.GetParentScope())[reg->GetName()] = reg;
                                     }
                                     g_symbolTable.DecreaseScope();
                                     $$ = fd;

@@ -36,6 +36,12 @@ public:
 
     virtual bool IsFunc() override { return true; }
 
+    // Get the name symbol (child index 1)
+    cSymbol* GetName()
+    {
+        return dynamic_cast<cSymbol*>(GetChild(1));
+    }
+
     // Get the args node (child index 2) for parameter count comparison
     cArgsNode* GetArgs()
     {
