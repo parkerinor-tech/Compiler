@@ -13,17 +13,29 @@ class cVarDeclNode : public cDeclNode
 public:
     cVarDeclNode(cSymbol* type, cSymbol* name) : cDeclNode()
     {
-        // Check for duplicate definition in current scope
-        if (g_symbolTable.FindLocal(name->GetName()) != nullptr)
+        cSymbol* existing = g_symbolTable.FindLocal(name->GetName());
+        if (existing != nullptr && existing->GetDecl() != nullptr)
         {
+            // Already properly declared in this scope - duplicate error
             SemanticParseError("Symbol " + name->GetName() +
                                " already defined in current scope");
+            name->SetDecl(existing->GetDecl());
+        }
+        else if (existing != nullptr)
+        {
+            // Lexer inserted this symbol into current scope (no decl yet)
+            // Set decl directly on this symbol - same object, same ID
+            existing->SetDecl(this);
+            name = existing;
         }
         else
         {
-            // Associate this decl with the symbol and insert it
-            name->SetDecl(this);
-            g_symbolTable.Insert(name);
+            // Symbol not in current scope at all - came from outer scope
+            // Create a fresh symbol with a new ID for this inner scope
+            cSymbol* fresh = new cSymbol(name->GetName());
+            fresh->SetDecl(this);
+            g_symbolTable.Insert(fresh);
+            name = fresh;
         }
 
         m_type = type;
@@ -34,7 +46,6 @@ public:
 
     virtual bool IsVar() override { return true; }
 
-    // The type of a variable is the type of its type-symbol's decl
     virtual cDeclNode* GetType() override
     {
         if (m_type != nullptr && m_type->GetDecl() != nullptr)

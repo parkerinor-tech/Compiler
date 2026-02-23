@@ -96,7 +96,7 @@ int main(int argc, char **argv)
         }
         else
         {
-            std::cout << " Errors in compile\n";
+            std::cout << yynerrs << " Errors in compile\n";
         }
     }
 

@@ -42,6 +42,26 @@ class cSymbolTable
         // Returns nullptr if the symbol is not found.
         cSymbol *FindLocal(std::string name);
 
+        // Return the current (innermost) scope directly
+        symbolTable_t *GetCurrentScope() { return mScopes.back(); }
+
+        // Return the parent (second innermost) scope, or null if only one scope
+        symbolTable_t *GetParentScope()
+        {
+            if (mScopes.size() < 2) return nullptr;
+            return mScopes[mScopes.size() - 2];
+        }
+
+        // Find a symbol in the parent scope only
+        cSymbol *FindInParent(std::string name)
+        {
+            symbolTable_t *parent = GetParentScope();
+            if (parent == nullptr) return nullptr;
+            auto found = parent->find(name);
+            if (found != parent->end()) return found->second;
+            return nullptr;
+        }
+
     private:
         // Stack of scopes (innermost scope is back())
         std::vector<symbolTable_t*> mScopes;

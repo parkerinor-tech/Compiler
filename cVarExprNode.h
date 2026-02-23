@@ -15,7 +15,8 @@ public:
     {
         if (sym != nullptr)
         {
-            // Check that the symbol has been declared (has a decl)
+            // Symbol is "defined" only if it has a decl set
+            // Symbols inserted by the lexer with no decl = undefined
             cSymbol* found = g_symbolTable.Find(sym->GetName());
             if (found == nullptr || found->GetDecl() == nullptr)
             {

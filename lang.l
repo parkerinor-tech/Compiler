@@ -97,7 +97,6 @@ print                       DO_RETURN(PRINT);
     }
     yylval.symbol = sym;
 
-    // Use GetDecl()->IsType() instead of GetIsType()
     if (sym->GetDecl() != nullptr && sym->GetDecl()->IsType()) {
         return TYPE_ID;
     } else {

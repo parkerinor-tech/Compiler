@@ -15,11 +15,14 @@
 // Flag set when a semantic error occurs in an AST node constructor
 static bool g_semanticErrorHappened = false;
 
+// Macros for semantic error handling:
+// CHECK_ERROR - note the error but continue parsing
+// PROP_ERROR  - note the error AND trigger bison error recovery
 #define CHECK_ERROR() { if (g_semanticErrorHappened) \
     { g_semanticErrorHappened = false; } }
 #define PROP_ERROR() { if (g_semanticErrorHappened) \
     { g_semanticErrorHappened = false; YYERROR; } }
-    
+
 %}
 
 %locations
@@ -70,12 +73,6 @@ static bool g_semanticErrorHappened = false;
 
     cAstNode *yyast_root;
 %}
-
-// Macros for semantic error handling:
-// CHECK_ERROR - note the error but continue parsing
-// PROP_ERROR  - note the error AND trigger bison error recovery
-
-
 
 %start  program
 
@@ -154,7 +151,7 @@ decls:      decls decl
         |   decl
                                 { $$ = new cDeclsNode($1);  }
 decl:       var_decl ';'
-                                { $$ = $1; PROP_ERROR(); }
+                                { $$ = $1; CHECK_ERROR(); }
         |   array_decl ';'
                             { $$ = dynamic_cast<cDeclNode*>($1); }
         |   struct_decl ';'
@@ -163,11 +160,10 @@ decl:       var_decl ';'
                             { $$ = dynamic_cast<cDeclNode*>($1); }
 
 var_decl:   TYPE_ID IDENTIFIER
-        { $$ = new cVarDeclNode($1, $2); PROP_ERROR(); }
+        { $$ = new cVarDeclNode($1, $2); CHECK_ERROR(); }
 
 struct_decl:  STRUCT open decls close IDENTIFIER
                                 { 
-                                    // Check for duplicate before inserting
                                     if (g_symbolTable.FindLocal($5->GetName()) != nullptr)
                                     {
                                         SemanticParseError("Symbol " + $5->GetName() +
@@ -178,9 +174,9 @@ struct_decl:  STRUCT open decls close IDENTIFIER
                                         cStructDeclNode* sd = new cStructDeclNode($3, $5);
                                         $5->SetDecl(sd);
                                         g_symbolTable.Insert($5);
+                                        $$ = sd;
                                     }
-                                    $$ = new cStructDeclNode($3,$5);
-                                    PROP_ERROR();
+                                    CHECK_ERROR();
                                 }
 array_decl:   ARRAY TYPE_ID '[' INT_VAL ']' IDENTIFIER
                                 {
@@ -196,15 +192,189 @@ array_decl:   ARRAY TYPE_ID '[' INT_VAL ']' IDENTIFIER
                                         g_symbolTable.Insert($6);
                                         $$ = ad;
                                     }
-                                    PROP_ERROR();
+                                    CHECK_ERROR();
                                 }
 
 func_decl:  func_header ';'
-                                { g_symbolTable.DecreaseScope(); $$ = new cFuncDeclNode(dynamic_cast<cFuncHeaderNode*>($1)); }
+                                { 
+                                    cFuncHeaderNode* header = dynamic_cast<cFuncHeaderNode*>($1);
+                                    cSymbol* nameSym = header->GetName();
+                                    cSymbol* existing = g_symbolTable.FindInParent(nameSym->GetName());
+                                    if (existing != nullptr && existing->GetDecl() != nullptr)
+                                    {
+                                        if (!existing->GetDecl()->IsFunc())
+                                        {
+                                            SemanticParseError("Symbol " + nameSym->GetName() +
+                                                " already defined in current scope", header->GetLineNum());
+                                        }
+                                        else
+                                        {
+                                            // Check return type matches
+                                            cDeclNode* existType = existing->GetDecl()->GetType();
+                                            cDeclNode* newType = header->GetType() ? header->GetType()->GetDecl() : nullptr;
+                                            if (existType != newType)
+                                            {
+                                                SemanticParseError(nameSym->GetName() +
+                                                    " previously declared with different return type", header->GetLineNum());
+                                            }
+                                            // Check parameter count matches
+                                            cArgsNode* existArgs = dynamic_cast<cFuncDeclNode*>(existing->GetDecl()) ?
+                                                dynamic_cast<cFuncDeclNode*>(existing->GetDecl())->GetArgs() : nullptr;
+                                            cArgsNode* newArgs = header->GetArgs();
+                                            int existCount = existArgs ? existArgs->GetNumChildren() : 0;
+                                            int newCount = newArgs ? newArgs->GetNumChildren() : 0;
+                                            if (existCount != newCount)
+                                            {
+                                                SemanticParseError(nameSym->GetName() +
+                                                    " redeclared with a different number of parameters", header->GetLineNum());
+                                            }
+                                            // Reuse existing symbol for same-named function
+                                            (*g_symbolTable.GetParentScope())[nameSym->GetName()] = existing;
+                                        }
+                                    }
+                                    // If conflicting with non-func in parent, create fresh symbol first
+                                    if (existing != nullptr && existing->GetDecl() != nullptr &&
+                                        !existing->GetDecl()->IsFunc())
+                                    {
+                                        cSymbol* fresh = new cSymbol(nameSym->GetName());
+                                        header->SetName(fresh);
+                                        nameSym = fresh;
+                                    }
+                                    cFuncDeclNode* fd = new cFuncDeclNode(header);
+                                    if (existing == nullptr || existing->GetDecl() == nullptr)
+                                    {
+                                        // First declaration - use the symbol as-is
+                                        nameSym->SetDecl(fd);
+                                        (*g_symbolTable.GetParentScope())[nameSym->GetName()] = nameSym;
+                                    }
+                                    else if (existing->GetDecl()->IsFunc())
+                                    {
+                                        // Reuse the existing decl node so stmts are preserved in XML
+                                        fd = dynamic_cast<cFuncDeclNode*>(existing->GetDecl());
+                                    }
+                                    else
+                                    {
+                                        // Conflict with non-func - fresh symbol already set above
+                                        nameSym->SetDecl(fd);
+                                        (*g_symbolTable.GetParentScope())[nameSym->GetName()] = nameSym;
+                                    }
+                                    g_symbolTable.DecreaseScope();
+                                    $$ = fd;
+                                    CHECK_ERROR();
+                                }
         |   func_header  '{' decls stmts '}'
-                                { $$ = new cFuncDeclNode(dynamic_cast<cFuncHeaderNode*>($1), $3, $4); g_symbolTable.DecreaseScope(); }
+                                { 
+                                    cFuncHeaderNode* header = dynamic_cast<cFuncHeaderNode*>($1);
+                                    cSymbol* nameSym = header->GetName();
+                                    cSymbol* existing = g_symbolTable.FindInParent(nameSym->GetName());
+                                    if (existing != nullptr && existing->GetDecl() != nullptr)
+                                    {
+                                        if (!existing->GetDecl()->IsFunc())
+                                        {
+                                            SemanticParseError("Symbol " + nameSym->GetName() +
+                                                " already defined in current scope", header->GetLineNum());
+                                        }
+                                        else
+                                        {
+                                            cDeclNode* existType = existing->GetDecl()->GetType();
+                                            cDeclNode* newType = header->GetType() ? header->GetType()->GetDecl() : nullptr;
+                                            if (existType != newType)
+                                            {
+                                                SemanticParseError(nameSym->GetName() +
+                                                    " previously declared with different return type", header->GetLineNum());
+                                            }
+                                            cArgsNode* existArgs = dynamic_cast<cFuncDeclNode*>(existing->GetDecl()) ?
+                                                dynamic_cast<cFuncDeclNode*>(existing->GetDecl())->GetArgs() : nullptr;
+                                            cArgsNode* newArgs = header->GetArgs();
+                                            int existCount = existArgs ? existArgs->GetNumChildren() : 0;
+                                            int newCount = newArgs ? newArgs->GetNumChildren() : 0;
+                                            if (existCount != newCount)
+                                            {
+                                                SemanticParseError(nameSym->GetName() +
+                                                    " redeclared with a different number of parameters", header->GetLineNum());
+                                            }
+                                            // Check for duplicate definition (body defined twice)
+                                            cFuncDeclNode* existFunc = dynamic_cast<cFuncDeclNode*>(existing->GetDecl());
+                                            if (existFunc && existFunc->GetNumChildren() >= 3)
+                                            {
+                                                SemanticParseError(nameSym->GetName() +
+                                                    " already has a definition");
+                                            }
+                                            (*g_symbolTable.GetParentScope())[nameSym->GetName()] = existing;
+                                        }
+                                    }
+                                    cFuncDeclNode* fd = new cFuncDeclNode(header, $3, $4);
+                                    if (existing == nullptr || existing->GetDecl() == nullptr)
+                                    {
+                                        nameSym->SetDecl(fd);
+                                        (*g_symbolTable.GetParentScope())[nameSym->GetName()] = nameSym;
+                                    }
+                                    else if (existing->GetDecl()->IsFunc() && !g_semanticErrorHappened)
+                                    {
+                                        // Update the existing symbol to point to this definition
+                                        // so subsequent prototypes can find the body
+                                        existing->SetDecl(fd);
+                                    }
+                                    g_symbolTable.DecreaseScope();
+                                    $$ = fd;
+                                    CHECK_ERROR();
+                                }
         |   func_header  '{' stmts '}'
-                                { $$ = new cFuncDeclNode(dynamic_cast<cFuncHeaderNode*>($1), $3); g_symbolTable.DecreaseScope(); }
+                                { 
+                                    cFuncHeaderNode* header = dynamic_cast<cFuncHeaderNode*>($1);
+                                    cSymbol* nameSym = header->GetName();
+                                    cSymbol* existing = g_symbolTable.FindInParent(nameSym->GetName());
+                                    if (existing != nullptr && existing->GetDecl() != nullptr)
+                                    {
+                                        if (!existing->GetDecl()->IsFunc())
+                                        {
+                                            SemanticParseError("Symbol " + nameSym->GetName() +
+                                                " already defined in current scope", header->GetLineNum());
+                                        }
+                                        else
+                                        {
+                                            cDeclNode* existType = existing->GetDecl()->GetType();
+                                            cDeclNode* newType = header->GetType() ? header->GetType()->GetDecl() : nullptr;
+                                            if (existType != newType)
+                                            {
+                                                SemanticParseError(nameSym->GetName() +
+                                                    " previously declared with different return type", header->GetLineNum());
+                                            }
+                                            cArgsNode* existArgs = dynamic_cast<cFuncDeclNode*>(existing->GetDecl()) ?
+                                                dynamic_cast<cFuncDeclNode*>(existing->GetDecl())->GetArgs() : nullptr;
+                                            cArgsNode* newArgs = header->GetArgs();
+                                            int existCount = existArgs ? existArgs->GetNumChildren() : 0;
+                                            int newCount = newArgs ? newArgs->GetNumChildren() : 0;
+                                            if (existCount != newCount)
+                                            {
+                                                SemanticParseError(nameSym->GetName() +
+                                                    " redeclared with a different number of parameters", header->GetLineNum());
+                                            }
+                                            // Check for duplicate definition (body defined twice)
+                                            cFuncDeclNode* existFunc = dynamic_cast<cFuncDeclNode*>(existing->GetDecl());
+                                            if (existFunc && existFunc->GetNumChildren() >= 3)
+                                            {
+                                                SemanticParseError(nameSym->GetName() +
+                                                    " already has a definition");
+                                            }
+                                            (*g_symbolTable.GetParentScope())[nameSym->GetName()] = existing;
+                                        }
+                                    }
+                                    cFuncDeclNode* fd = new cFuncDeclNode(header, $3);
+                                    if (existing == nullptr || existing->GetDecl() == nullptr)
+                                    {
+                                        nameSym->SetDecl(fd);
+                                        (*g_symbolTable.GetParentScope())[nameSym->GetName()] = nameSym;
+                                    }
+                                    else if (existing->GetDecl()->IsFunc() && !g_semanticErrorHappened)
+                                    {
+                                        // Update the existing symbol to point to this definition
+                                        existing->SetDecl(fd);
+                                    }
+                                    g_symbolTable.DecreaseScope();
+                                    $$ = fd;
+                                    CHECK_ERROR();
+                                }
 func_header: func_prefix paramsspec ')'
                                 { dynamic_cast<cFuncHeaderNode*>($1)->SetArgs(dynamic_cast<cArgsNode*>($2)); $$ = $1; }
         |    func_prefix ')'
@@ -253,12 +423,30 @@ stmt:       IF '(' expr ')' stmts ENDIF ';'
                             {}
 
 func_call:  IDENTIFIER '(' params ')'
-                                    { $$ = new cFuncCallNode($1, dynamic_cast<cParamsNode*>($3)); }
+                                    { 
+                                        cSymbol* sym = g_symbolTable.Find($1->GetName());
+                                        if (sym == nullptr || sym->GetDecl() == nullptr)
+                                            SemanticParseError("Symbol " + $1->GetName() + " not defined");
+                                        else
+                                            $1 = sym;
+                                        $$ = new cFuncCallNode($1, dynamic_cast<cParamsNode*>($3));
+                                        CHECK_ERROR();
+                                    }
         |   IDENTIFIER '(' ')'
-                            { $$ = new cFuncCallNode($1, nullptr); }
+                            { 
+                                cSymbol* sym = g_symbolTable.Find($1->GetName());
+                                if (sym == nullptr || sym->GetDecl() == nullptr)
+                                    SemanticParseError("Symbol " + $1->GetName() + " not defined");
+                                else
+                                    $1 = sym;
+                                $$ = new cFuncCallNode($1, nullptr);
+                                CHECK_ERROR();
+                            }
 
 varref: IDENTIFIER
       {
+            cSymbol* sym = g_symbolTable.Find($1->GetName());
+            if (sym != nullptr) $1 = sym;
             $$ = new cVarExprNode($1); CHECK_ERROR();
       }
     |   varref '.' IDENTIFIER
@@ -346,6 +534,14 @@ void SemanticParseError(std::string error)
 {
     std::cout << "ERROR: " << error << " near line "
               << yylineno << "\n";
+    g_semanticErrorHappened = true;
+    yynerrs++;
+}
+
+void SemanticParseError(std::string error, int line)
+{
+    std::cout << "ERROR: " << error << " near line "
+              << line << "\n";
     g_semanticErrorHappened = true;
     yynerrs++;
 }

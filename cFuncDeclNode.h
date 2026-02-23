@@ -36,6 +36,12 @@ public:
 
     virtual bool IsFunc() override { return true; }
 
+    // Get the args node (child index 2) for parameter count comparison
+    cArgsNode* GetArgs()
+    {
+        return dynamic_cast<cArgsNode*>(GetChild(2));
+    }
+
     // The return type of the function comes from child 0 (the type symbol)
     virtual cDeclNode* GetType() override
     {
