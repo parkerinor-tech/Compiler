@@ -1,7 +1,0 @@
-program
-{
-    int aaa;
-    float aaa();
-
-    aaa = 1;
-}
