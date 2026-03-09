@@ -4,13 +4,7 @@
 //
 // Defines AST node for a block of code (stuff inside {})
 //
-// Since blocks can take the place of statements, this class inherits from 
-// cStmtNode
-//
 // Author: Phil Howard 
-// phil.howard@oit.edu
-//
-// Date: Jan. 18, 2016
 //
 
 #include "cAstNode.h"
@@ -21,16 +15,25 @@
 class cBlockNode : public cStmtNode
 {
     public:
-        // params are the decls and statements contained in the block
         cBlockNode(cDeclsNode *decls, cStmtsNode *statements)
-            : cStmtNode()
+            : cStmtNode(), m_size(0)
         {
             AddChild(decls);
             AddChild(statements);
         }
 
+        void SetSize(int size) { m_size = size; }
+        int  GetSize()         { return m_size; }
+
+        virtual string AttributesToString() override
+        {
+            if (m_size == 0) return "";
+            return " size=\"" + std::to_string(m_size) + "\"";
+        }
+
         virtual string NodeType() { return string("block"); }
         virtual void Visit(cVisitor *visitor) { visitor->Visit(this); }
+
         cDeclsNode *GetDecls()
         {
             return static_cast<cDeclsNode*>(GetChild(0));
@@ -39,4 +42,7 @@ class cBlockNode : public cStmtNode
         {
             return static_cast<cStmtsNode*>(GetChild(1));
         }
+
+    protected:
+        int m_size;
 };

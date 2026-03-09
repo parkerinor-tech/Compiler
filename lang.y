@@ -155,7 +155,7 @@ decl:       var_decl ';'
         |   array_decl ';'
                             { $$ = dynamic_cast<cDeclNode*>($1); }
         |   struct_decl ';'
-                            { $$ = dynamic_cast<cDeclNode*>($1); }
+                            { $$ = ($1 != nullptr) ? dynamic_cast<cDeclNode*>($1) : nullptr; }
         |   func_decl
                             { $$ = dynamic_cast<cDeclNode*>($1); }
 
@@ -163,8 +163,10 @@ var_decl:   TYPE_ID IDENTIFIER
         { $$ = new cVarDeclNode($1, $2); CHECK_ERROR(); }
 
 struct_decl:  STRUCT open decls close IDENTIFIER
-                                { 
-                                    if (g_symbolTable.FindLocal($5->GetName()) != nullptr)
+                                {
+                                    $$ = nullptr;
+                                    cSymbol* existing5 = g_symbolTable.FindLocal($5->GetName());
+                                    if (existing5 != nullptr && existing5->GetDecl() != nullptr)
                                     {
                                         SemanticParseError("Symbol " + $5->GetName() +
                                             " already defined in current scope");
@@ -172,16 +174,25 @@ struct_decl:  STRUCT open decls close IDENTIFIER
                                     else
                                     {
                                         cStructDeclNode* sd = new cStructDeclNode($3, $5);
-                                        $5->SetDecl(sd);
-                                        g_symbolTable.Insert($5);
+                                        if (existing5 != nullptr)
+                                        {
+                                            existing5->SetDecl(sd);
+                                            $5 = existing5;
+                                        }
+                                        else
+                                        {
+                                            $5->SetDecl(sd);
+                                            g_symbolTable.Insert($5);
+                                        }
                                         $$ = sd;
                                     }
                                     CHECK_ERROR();
                                 }
 array_decl:   ARRAY TYPE_ID '[' INT_VAL ']' IDENTIFIER
                                 {
-                                    cSymbol* existing = g_symbolTable.FindLocal($6->GetName());
-                                    if (existing != nullptr && existing->GetDecl() != nullptr)
+                                    $$ = nullptr;
+                                    cSymbol* existing6 = g_symbolTable.FindLocal($6->GetName());
+                                    if (existing6 != nullptr && existing6->GetDecl() != nullptr)
                                     {
                                         SemanticParseError("Symbol " + $6->GetName() +
                                             " already defined in current scope");
@@ -189,8 +200,11 @@ array_decl:   ARRAY TYPE_ID '[' INT_VAL ']' IDENTIFIER
                                     else
                                     {
                                         cArrayDeclNode* ad = new cArrayDeclNode($2, $6, $4);
-                                        if (existing != nullptr)
-                                            existing->SetDecl(ad);
+                                        if (existing6 != nullptr)
+                                        {
+                                            existing6->SetDecl(ad);
+                                            $6 = existing6;
+                                        }
                                         else
                                         {
                                             $6->SetDecl(ad);
@@ -250,15 +264,12 @@ func_decl:  func_header ';'
                                     cFuncDeclNode* fd = new cFuncDeclNode(header);
                                     if (existing != nullptr && existing->GetDecl() != nullptr && existing->GetDecl()->IsFunc())
                                     {
-                                        // Re-declaration of a func: reuse existing decl so stmts are preserved in XML
-                                        fd = dynamic_cast<cFuncDeclNode*>(existing->GetDecl());
+                                        // Re-declaration: update existing symbol to point to new fd
                                         existing->SetDecl(fd);
                                         (*g_symbolTable.GetParentScope())[existing->GetName()] = existing;
                                     }
                                     else if (!g_semanticErrorHappened)
                                     {
-                                        // nameSym has a non-func decl (outer var): create fresh symbol for inner scope.
-                                        // Otherwise nameSym is bare (no decl): use it directly.
                                         cSymbol* reg = (nameSym->GetDecl() != nullptr && !nameSym->GetDecl()->IsFunc())
                                             ? new cSymbol(nameSym->GetName())
                                             : nameSym;
@@ -302,7 +313,7 @@ func_decl:  func_header ';'
                                             }
                                             // Check for duplicate definition (body defined twice)
                                             cFuncDeclNode* existFunc = dynamic_cast<cFuncDeclNode*>(existing->GetDecl());
-                                            if (existFunc && existFunc->GetNumChildren() >= 3)
+                                            if (existFunc && existFunc->HasBody())
                                             {
                                                 SemanticParseError(nameSym->GetName() +
                                                     " already has a definition");
@@ -367,7 +378,7 @@ func_decl:  func_header ';'
                                             }
                                             // Check for duplicate definition (body defined twice)
                                             cFuncDeclNode* existFunc = dynamic_cast<cFuncDeclNode*>(existing->GetDecl());
-                                            if (existFunc && existFunc->GetNumChildren() >= 3)
+                                            if (existFunc && existFunc->HasBody())
                                             {
                                                 SemanticParseError(nameSym->GetName() +
                                                     " already has a definition");
@@ -541,8 +552,6 @@ fact:       '(' expr ')'
                             { $$ = $1; }
         |   func_call
                             { $$ = $1; }
-        |   '-' fact
-                            { $$ = new cUnaryExprNode(new cOpNode('-'), $2); }
 
 %%
 

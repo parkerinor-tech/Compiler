@@ -72,5 +72,4 @@ void cSymbolTable::InitRootTable()
     insertType("long",   8, false);
     insertType("double", 8, true);
 }
-// Global symbol table instance (declared extern in cSymbolTable.h)
 cSymbolTable g_symbolTable;

@@ -1,25 +1,29 @@
-// cParamsNode.h
-// Defines an AST node representing a list of parameters in a function call.
-
 #pragma once
 #include "cAstNode.h"
 
-// Represents parameters passed to a function (e.g., foo(a, b, c))
 class cParamsNode : public cAstNode
 {
 public:
-    // param = single parameter expression
-    cParamsNode(cAstNode* param)
+    cParamsNode(cAstNode* param) : m_size(0)
     {
         if (param != nullptr) AddChild(param);
     }
 
+    void SetSize(int size) { m_size = size; }
+    int  GetSize()         { return m_size; }
+
     // Public getter for children (used by cSemantics visitor)
     cAstNode* GetChildNode(int index) { return cAstNode::GetChild(index); }
 
-    // Returns node type identifier
-    virtual string NodeType() { return "params"; }
+    virtual string AttributesToString() override
+    {
+        if (m_size == 0) return "";
+        return " size=\"" + std::to_string(m_size) + "\"";
+    }
 
-    // Visitor pattern hook
+    virtual string NodeType() { return "params"; }
     virtual void Visit(cVisitor* visitor) { visitor->Visit(this); }
+
+protected:
+    int m_size;
 };

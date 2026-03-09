@@ -14,18 +14,25 @@
 class cDeclsNode : public cAstNode
 {
     public:
-        // param is the first decl in this decls
-        cDeclsNode(cDeclNode *decl) : cAstNode()
+        cDeclsNode(cDeclNode *decl) : cAstNode(), m_size(0)
         {
             AddChild(decl);
         }
 
-        // Add a decl to the list
-        void Insert(cDeclNode *decl)
+        void Insert(cDeclNode *decl) { AddChild(decl); }
+
+        void SetSize(int size) { m_size = size; }
+        int  GetSize()         { return m_size; }
+
+        virtual string AttributesToString() override
         {
-            AddChild(decl);
+            if (m_size == 0) return string("");
+            return string(" size=\"") + std::to_string(m_size) + string("\"");
         }
 
         virtual string NodeType() { return string("decls"); }
         virtual void Visit(cVisitor *visitor) { visitor->Visit(this); }
+
+    protected:
+        int m_size;
 };

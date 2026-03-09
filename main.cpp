@@ -24,7 +24,7 @@
 #include "cSymbol.h"
 
 #define LAB5B
-//#define LAB6
+#define LAB6
 //#define LAB7
 
 // define global variables

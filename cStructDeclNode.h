@@ -14,6 +14,7 @@ public:
     }
 
     virtual bool IsStruct() override { return true; }
+    cDeclsNode* GetDecls() { return dynamic_cast<cDeclsNode*>(GetChild(0)); }
     virtual bool IsType()   override { return true; }
 
     virtual string GetName() override

@@ -13,7 +13,7 @@
 class cDeclNode : public cAstNode
 {
     public:
-        cDeclNode() : cAstNode() {}
+        cDeclNode() : cAstNode(), m_size(0), m_offset(0) {}
 
         virtual bool IsArray()  { return false; }
         virtual bool IsStruct() { return false; }
@@ -28,12 +28,20 @@ class cDeclNode : public cAstNode
         virtual cDeclNode* GetType() = 0;
         virtual string GetName() = 0;
 
-        // Returns true if 'other' can be assigned to 'this'.
-        // Rules:
-        //   - Same type: always compatible
-        //   - Int (any size) can promote to float/double
-        //   - Float cannot assign to int
-        //   - Within same category: source size must be <= destination size
+        // Size and offset getters/setters (per lab rules: no computation here)
+        void SetSize(int size)     { m_size = size; }
+        void SetOffset(int offset) { m_offset = offset; }
+        int  GetAllocSize()        { return m_size; }
+        int  GetOffset()           { return m_offset; }
+
+        virtual string AttributesToString() override
+        {
+            if (m_size == 0 && m_offset == 0) return "";
+            string result = " size=\"" + std::to_string(m_size) + "\"";
+            result += " offset=\"" + std::to_string(m_offset) + "\"";
+            return result;
+        }
+
         bool IsCompatibleWith(cDeclNode* other)
         {
             if (other == nullptr) return false;
@@ -45,19 +53,17 @@ class cDeclNode : public cAstNode
             int thisSize  = thisType->GetSize();
             int otherSize = otherType->GetSize();
 
-            // Float cannot be assigned to int category
             if (thisType->IsInt() && otherType->IsFloat()) return false;
-
-            // Int can be assigned to float (promotion)
             if (thisType->IsFloat() && otherType->IsInt()) return true;
-
-            // Within same category: source must fit in destination
             if (thisType->IsFloat() && otherType->IsFloat())
                 return otherSize <= thisSize;
-
             if (thisType->IsInt() && otherType->IsInt())
                 return otherSize <= thisSize;
 
             return false;
         }
+
+    protected:
+        int m_size;
+        int m_offset;
 };

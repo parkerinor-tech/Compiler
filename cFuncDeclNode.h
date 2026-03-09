@@ -77,6 +77,26 @@ public:
         return nullptr;
     }
 
+    // Get decls/stmts children for size computation
+    cDeclsNode* GetDecls()
+    {
+        for (int i = 0; i < GetNumChildren(); i++)
+        {
+            cDeclsNode* d = dynamic_cast<cDeclsNode*>(GetChild(i));
+            if (d != nullptr) return d;
+        }
+        return nullptr;
+    }
+    cStmtsNode* GetStmts()
+    {
+        for (int i = 0; i < GetNumChildren(); i++)
+        {
+            cStmtsNode* s = dynamic_cast<cStmtsNode*>(GetChild(i));
+            if (s != nullptr) return s;
+        }
+        return nullptr;
+    }
+
     virtual string NodeType() { return "func"; }
     virtual void Visit(cVisitor* visitor) { visitor->Visit(this); }
 };

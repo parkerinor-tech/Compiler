@@ -1,15 +1,10 @@
 program
 {
-  char aaa;
-  char bbb;
+    char aa;
+    int  bb;
+    float cc;
 
-  print(aaa);
-  {
-     int aaa;
-     print(aaa);
-     print(bbb);
-  }
-
-  print(aaa);
-  print(bbb);
+    aa = 1;
+    bb = 200;
+    cc = 3.0;
 }

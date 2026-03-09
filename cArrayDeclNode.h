@@ -7,7 +7,7 @@ class cArrayDeclNode : public cDeclNode
 {
 public:
     cArrayDeclNode(cSymbol* type, cSymbol* name, int size)
-        : m_type(type), m_size(size)
+        : m_type(type), m_count(size)
     {
         AddChild(type);
         AddChild(name);
@@ -15,6 +15,9 @@ public:
 
     virtual bool IsArray() override { return true; }
     virtual bool IsType()  override { return true; }
+
+    int GetCount() { return m_count; }
+    cSymbol* GetElemTypeSym() { return dynamic_cast<cSymbol*>(GetChild(0)); }
 
     virtual string GetName() override
     {
@@ -37,10 +40,10 @@ public:
 
     virtual string AttributesToString()
     {
-        return string(" count=\"") + std::to_string(m_size) + "\"";
+        return string(" count=\"") + std::to_string(m_count) + "\"";
     }
 
 protected:
     cSymbol* m_type;
-    int m_size;
+    int m_count;
 };

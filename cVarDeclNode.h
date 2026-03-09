@@ -45,6 +45,7 @@ public:
     }
 
     virtual bool IsVar() override { return true; }
+    cSymbol* GetTypeSymbol() { return m_type; }
 
     virtual bool IsArray() override 
     { 
