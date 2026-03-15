@@ -1,0 +1,14 @@
+// Test stack preservation: variables unchanged across function calls
+program
+{
+    int twice(int x)
+    {
+        return x * 2;
+    }
+    int a;
+    int b;
+    a = 5;
+    b = twice(a);
+    print(a);
+    print(b);
+}

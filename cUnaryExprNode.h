@@ -11,6 +11,8 @@ public:
         AddChild(expr);
     }
 
+    cExprNode* GetExpr() { return dynamic_cast<cExprNode*>(GetChild(1)); }
+
     virtual cDeclNode* GetType() override
     {
         cExprNode* expr = dynamic_cast<cExprNode*>(GetChild(1));

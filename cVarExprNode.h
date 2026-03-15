@@ -2,8 +2,6 @@
 //**************************************
 // cVarExprNode.h
 //
-// Checks that a referenced variable has been declared.
-//
 #include "cExprNode.h"
 #include "cSymbol.h"
 #include "cSymbolTable.h"
@@ -24,6 +22,9 @@ public:
         }
     }
 
+    // Add a subscript expression (for array refs)
+    void AddSubscript(cExprNode* expr) { if (expr) AddChild(expr); }
+
     cSymbol* GetName()
     {
         if (NumChildren() > 0)
@@ -34,6 +35,18 @@ public:
     // Public getter for children (used by cSemantics visitor)
     cAstNode* GetChildNode(int index) { return cExprNode::GetChild(index); }
 
+    // Returns true if this is an array reference (has subscripts)
+    bool IsArray() { return NumChildren() > 1; }
+
+    // Number of subscript dimensions
+    int GetNumSubscripts() { return NumChildren() - 1; }
+
+    // Get subscript expression at dimension i
+    cExprNode* GetSubscript(int i)
+    {
+        return dynamic_cast<cExprNode*>(GetChild(i + 1));
+    }
+
     virtual cDeclNode* GetType() override
     {
         cSymbol* sym = GetName();
@@ -42,15 +55,15 @@ public:
         return nullptr;
     }
 
-    // Size and offset for varref (computed by cComputeSize)
-    void SetSize(int size)       { m_size = size; }
-    void SetOffset(int offset)   { m_offset = offset; }
-    int  GetVarSize()            { return m_size; }
-    int  GetOffset()             { return m_offset; }
+    // Size and offset (computed by cComputeSize)
+    void SetSize(int size)     { m_size = size; }
+    void SetOffset(int offset) { m_offset = offset; }
+    int  GetVarSize()          { return m_size; }
+    int  GetOffset()           { return m_offset; }
 
-    // Row sizes for array references (comma-separated string)
-    void SetRowSizes(const string& rs) { m_rowSizes = rs; }
-    string GetRowSizes()               { return m_rowSizes; }
+    // Row sizes for array references
+    void   SetRowSizes(const string& rs) { m_rowSizes = rs; }
+    string GetRowSizes()                 { return m_rowSizes; }
 
     virtual string NodeType() { return "varref"; }
     virtual void Visit(cVisitor* visitor) { visitor->Visit(this); }

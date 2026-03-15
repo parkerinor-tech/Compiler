@@ -573,12 +573,12 @@ static const yytype_int8 yytranslate[] =
 static const yytype_int16 yyrline[] =
 {
        0,   127,   127,   135,   137,   140,   143,   146,   151,   153,
-     155,   157,   159,   162,   165,   191,   218,   283,   348,   413,
-     415,   417,   419,   421,   424,   427,   432,   437,   439,   441,
-     443,   445,   447,   449,   451,   453,   457,   460,   470,   481,
-     487,   492,   499,   502,   504,   507,   510,   512,   514,   516,
-     518,   520,   522,   524,   526,   529,   531,   533,   536,   538,
-     540,   542,   545,   547,   549,   551,   553
+     155,   157,   159,   162,   165,   181,   208,   272,   337,   402,
+     404,   406,   408,   410,   413,   416,   421,   426,   428,   430,
+     432,   434,   436,   438,   440,   442,   446,   449,   459,   470,
+     476,   481,   488,   491,   493,   496,   499,   501,   503,   505,
+     507,   509,   511,   513,   515,   518,   520,   522,   525,   527,
+     529,   531,   534,   536,   538,   540,   542
 };
 #endif
 
@@ -1457,10 +1457,8 @@ yyreduce:
 
   case 14: /* struct_decl: STRUCT open decls close IDENTIFIER  */
 #line 166 "lang.y"
-                                {
-                                    (yyval.ast_node) = nullptr;
-                                    cSymbol* existing5 = g_symbolTable.FindLocal((yyvsp[0].symbol)->GetName());
-                                    if (existing5 != nullptr && existing5->GetDecl() != nullptr)
+                                { 
+                                    if (g_symbolTable.FindLocal((yyvsp[0].symbol)->GetName()) != nullptr)
                                     {
                                         SemanticParseError("Symbol " + (yyvsp[0].symbol)->GetName() +
                                             " already defined in current scope");
@@ -1468,25 +1466,17 @@ yyreduce:
                                     else
                                     {
                                         cStructDeclNode* sd = new cStructDeclNode((yyvsp[-2].decls_node), (yyvsp[0].symbol));
-                                        if (existing5 != nullptr)
-                                        {
-                                            existing5->SetDecl(sd);
-                                            (yyvsp[0].symbol) = existing5;
-                                        }
-                                        else
-                                        {
-                                            (yyvsp[0].symbol)->SetDecl(sd);
-                                            g_symbolTable.Insert((yyvsp[0].symbol));
-                                        }
+                                        (yyvsp[0].symbol)->SetDecl(sd);
+                                        g_symbolTable.Insert((yyvsp[0].symbol));
                                         (yyval.ast_node) = sd;
                                     }
                                     CHECK_ERROR();
                                 }
-#line 1486 "langparse.c"
+#line 1476 "langparse.c"
     break;
 
   case 15: /* array_decl: ARRAY TYPE_ID '[' INT_VAL ']' IDENTIFIER  */
-#line 192 "lang.y"
+#line 182 "lang.y"
                                 {
                                     (yyval.ast_node) = nullptr;
                                     cSymbol* existing6 = g_symbolTable.FindLocal((yyvsp[0].symbol)->GetName());
@@ -1512,11 +1502,11 @@ yyreduce:
                                     }
                                     CHECK_ERROR();
                                 }
-#line 1516 "langparse.c"
+#line 1506 "langparse.c"
     break;
 
   case 16: /* func_decl: func_header ';'  */
-#line 219 "lang.y"
+#line 209 "lang.y"
                                 { 
                                     cFuncHeaderNode* header = dynamic_cast<cFuncHeaderNode*>((yyvsp[-1].ast_node));
                                     cSymbol* nameSym = header->GetName();
@@ -1565,7 +1555,6 @@ yyreduce:
                                     cFuncDeclNode* fd = new cFuncDeclNode(header);
                                     if (existing != nullptr && existing->GetDecl() != nullptr && existing->GetDecl()->IsFunc())
                                     {
-                                        // Re-declaration: update existing symbol to point to new fd
                                         existing->SetDecl(fd);
                                         (*g_symbolTable.GetParentScope())[existing->GetName()] = existing;
                                     }
@@ -1581,11 +1570,11 @@ yyreduce:
                                     (yyval.ast_node) = fd;
                                     CHECK_ERROR();
                                 }
-#line 1585 "langparse.c"
+#line 1574 "langparse.c"
     break;
 
   case 17: /* func_decl: func_header '{' decls stmts '}'  */
-#line 284 "lang.y"
+#line 273 "lang.y"
                                 { 
                                     cFuncHeaderNode* header = dynamic_cast<cFuncHeaderNode*>((yyvsp[-4].ast_node));
                                     cSymbol* nameSym = header->GetName();
@@ -1650,11 +1639,11 @@ yyreduce:
                                     (yyval.ast_node) = fd;
                                     CHECK_ERROR();
                                 }
-#line 1654 "langparse.c"
+#line 1643 "langparse.c"
     break;
 
   case 18: /* func_decl: func_header '{' stmts '}'  */
-#line 349 "lang.y"
+#line 338 "lang.y"
                                 { 
                                     cFuncHeaderNode* header = dynamic_cast<cFuncHeaderNode*>((yyvsp[-3].ast_node));
                                     cSymbol* nameSym = header->GetName();
@@ -1719,126 +1708,126 @@ yyreduce:
                                     (yyval.ast_node) = fd;
                                     CHECK_ERROR();
                                 }
-#line 1723 "langparse.c"
+#line 1712 "langparse.c"
     break;
 
   case 19: /* func_header: func_prefix paramsspec ')'  */
-#line 414 "lang.y"
+#line 403 "lang.y"
                                 { dynamic_cast<cFuncHeaderNode*>((yyvsp[-2].ast_node))->SetArgs(dynamic_cast<cArgsNode*>((yyvsp[-1].ast_node))); (yyval.ast_node) = (yyvsp[-2].ast_node); }
-#line 1729 "langparse.c"
+#line 1718 "langparse.c"
     break;
 
   case 20: /* func_header: func_prefix ')'  */
-#line 416 "lang.y"
+#line 405 "lang.y"
                             { (yyval.ast_node) = (yyvsp[-1].ast_node); }
-#line 1735 "langparse.c"
+#line 1724 "langparse.c"
     break;
 
   case 21: /* func_prefix: TYPE_ID IDENTIFIER '('  */
-#line 418 "lang.y"
+#line 407 "lang.y"
                                 { g_symbolTable.IncreaseScope(); (yyval.ast_node) = new cFuncHeaderNode((yyvsp[-2].symbol),(yyvsp[-1].symbol)); }
-#line 1741 "langparse.c"
+#line 1730 "langparse.c"
     break;
 
   case 22: /* paramsspec: paramsspec ',' paramspec  */
-#line 420 "lang.y"
+#line 409 "lang.y"
                                 { (yyvsp[-2].ast_node)->Add((yyvsp[0].ast_node)); (yyval.ast_node) = (yyvsp[-2].ast_node); }
-#line 1747 "langparse.c"
+#line 1736 "langparse.c"
     break;
 
   case 23: /* paramsspec: paramspec  */
-#line 422 "lang.y"
+#line 411 "lang.y"
                             { (yyval.ast_node) = new cArgsNode((yyvsp[0].ast_node)); }
-#line 1753 "langparse.c"
+#line 1742 "langparse.c"
     break;
 
   case 24: /* paramspec: var_decl  */
-#line 425 "lang.y"
+#line 414 "lang.y"
                                     { (yyval.ast_node) = (yyvsp[0].var_decl_node); }
-#line 1759 "langparse.c"
+#line 1748 "langparse.c"
     break;
 
   case 25: /* stmts: stmts stmt  */
-#line 428 "lang.y"
+#line 417 "lang.y"
 {
     (yyval.stmts_node) = (yyvsp[-1].stmts_node);
     (yyval.stmts_node)->Add((yyvsp[0].stmt_node));
 }
-#line 1768 "langparse.c"
+#line 1757 "langparse.c"
     break;
 
   case 26: /* stmts: stmt  */
-#line 433 "lang.y"
+#line 422 "lang.y"
 {
     (yyval.stmts_node) = new cStmtsNode((yyvsp[0].stmt_node));
 }
-#line 1776 "langparse.c"
+#line 1765 "langparse.c"
     break;
 
   case 27: /* stmt: IF '(' expr ')' stmts ENDIF ';'  */
-#line 438 "lang.y"
+#line 427 "lang.y"
                                 { (yyval.stmt_node) = new cIfNode((yyvsp[-4].expr_node),(yyvsp[-2].stmts_node)); }
-#line 1782 "langparse.c"
+#line 1771 "langparse.c"
     break;
 
   case 28: /* stmt: IF '(' expr ')' stmts ELSE stmts ENDIF ';'  */
-#line 440 "lang.y"
+#line 429 "lang.y"
                                 { (yyval.stmt_node) = new cIfNode((yyvsp[-6].expr_node),(yyvsp[-4].stmts_node),(yyvsp[-2].stmts_node)); }
-#line 1788 "langparse.c"
+#line 1777 "langparse.c"
     break;
 
   case 29: /* stmt: WHILE '(' expr ')' stmt  */
-#line 442 "lang.y"
+#line 431 "lang.y"
                                 { (yyval.stmt_node) = new cWhileNode((yyvsp[-2].expr_node),(yyvsp[0].stmt_node)); }
-#line 1794 "langparse.c"
+#line 1783 "langparse.c"
     break;
 
   case 30: /* stmt: PRINT '(' expr ')' ';'  */
-#line 444 "lang.y"
+#line 433 "lang.y"
                                 { (yyval.stmt_node) = new cPrintNode((yyvsp[-2].expr_node)); }
-#line 1800 "langparse.c"
+#line 1789 "langparse.c"
     break;
 
   case 31: /* stmt: PRINTS '(' STRING_LIT ')' ';'  */
-#line 446 "lang.y"
+#line 435 "lang.y"
                                 { (yyval.stmt_node) = new cPrintsNode(*(yyvsp[-2].str_val)); delete (yyvsp[-2].str_val); }
-#line 1806 "langparse.c"
+#line 1795 "langparse.c"
     break;
 
   case 32: /* stmt: lval '=' expr ';'  */
-#line 448 "lang.y"
+#line 437 "lang.y"
                             { (yyval.stmt_node) = new cAssignNode(dynamic_cast<cVarExprNode*>((yyvsp[-3].ast_node)), (yyvsp[-1].expr_node)); }
-#line 1812 "langparse.c"
+#line 1801 "langparse.c"
     break;
 
   case 33: /* stmt: func_call ';'  */
-#line 450 "lang.y"
+#line 439 "lang.y"
                             { (yyval.stmt_node) = dynamic_cast<cStmtNode*>((yyvsp[-1].expr_node)); }
-#line 1818 "langparse.c"
+#line 1807 "langparse.c"
     break;
 
   case 34: /* stmt: block  */
-#line 452 "lang.y"
+#line 441 "lang.y"
                             { (yyval.stmt_node) = (yyvsp[0].block_node); }
-#line 1824 "langparse.c"
+#line 1813 "langparse.c"
     break;
 
   case 35: /* stmt: RETURN expr ';'  */
-#line 454 "lang.y"
+#line 443 "lang.y"
             { 
                 (yyval.stmt_node) = new cReturnNode((yyvsp[-1].expr_node));
             }
-#line 1832 "langparse.c"
+#line 1821 "langparse.c"
     break;
 
   case 36: /* stmt: error ';'  */
-#line 458 "lang.y"
+#line 447 "lang.y"
                             {}
-#line 1838 "langparse.c"
+#line 1827 "langparse.c"
     break;
 
   case 37: /* func_call: IDENTIFIER '(' params ')'  */
-#line 461 "lang.y"
+#line 450 "lang.y"
                                     { 
                                         cSymbol* sym = g_symbolTable.Find((yyvsp[-3].symbol)->GetName());
                                         if (sym == nullptr || sym->GetDecl() == nullptr)
@@ -1848,11 +1837,11 @@ yyreduce:
                                         (yyval.expr_node) = new cFuncCallNode((yyvsp[-3].symbol), dynamic_cast<cParamsNode*>((yyvsp[-1].ast_node)));
                                         CHECK_ERROR();
                                     }
-#line 1852 "langparse.c"
+#line 1841 "langparse.c"
     break;
 
   case 38: /* func_call: IDENTIFIER '(' ')'  */
-#line 471 "lang.y"
+#line 460 "lang.y"
                             { 
                                 cSymbol* sym = g_symbolTable.Find((yyvsp[-2].symbol)->GetName());
                                 if (sym == nullptr || sym->GetDecl() == nullptr)
@@ -1862,189 +1851,189 @@ yyreduce:
                                 (yyval.expr_node) = new cFuncCallNode((yyvsp[-2].symbol), nullptr);
                                 CHECK_ERROR();
                             }
-#line 1866 "langparse.c"
+#line 1855 "langparse.c"
     break;
 
   case 39: /* varref: IDENTIFIER  */
-#line 482 "lang.y"
+#line 471 "lang.y"
       {
             cSymbol* sym = g_symbolTable.Find((yyvsp[0].symbol)->GetName());
             if (sym != nullptr) (yyvsp[0].symbol) = sym;
             (yyval.expr_node) = new cVarExprNode((yyvsp[0].symbol)); CHECK_ERROR();
       }
-#line 1876 "langparse.c"
+#line 1865 "langparse.c"
     break;
 
   case 40: /* varref: varref '.' IDENTIFIER  */
-#line 488 "lang.y"
+#line 477 "lang.y"
       {
             (yyvsp[-2].expr_node)->Add((yyvsp[0].symbol));
             (yyval.expr_node) = (yyvsp[-2].expr_node);
       }
-#line 1885 "langparse.c"
+#line 1874 "langparse.c"
     break;
 
   case 41: /* varref: varref '[' expr ']'  */
-#line 493 "lang.y"
+#line 482 "lang.y"
       {
             (yyvsp[-3].expr_node)->Add((yyvsp[-1].expr_node));
             (yyval.expr_node) = (yyvsp[-3].expr_node);
       }
-#line 1894 "langparse.c"
+#line 1883 "langparse.c"
     break;
 
   case 42: /* lval: varref  */
-#line 500 "lang.y"
+#line 489 "lang.y"
                                 { (yyval.ast_node) = (yyvsp[0].expr_node); }
-#line 1900 "langparse.c"
+#line 1889 "langparse.c"
     break;
 
   case 43: /* params: params ',' param  */
-#line 503 "lang.y"
+#line 492 "lang.y"
                                 { (yyvsp[-2].ast_node)->Add((yyvsp[0].ast_node)); (yyval.ast_node) = (yyvsp[-2].ast_node); }
-#line 1906 "langparse.c"
+#line 1895 "langparse.c"
     break;
 
   case 44: /* params: param  */
-#line 505 "lang.y"
+#line 494 "lang.y"
                             { (yyval.ast_node) = new cParamsNode((yyvsp[0].ast_node)); }
-#line 1912 "langparse.c"
+#line 1901 "langparse.c"
     break;
 
   case 45: /* param: expr  */
-#line 508 "lang.y"
+#line 497 "lang.y"
                                 { (yyval.ast_node) = (yyvsp[0].expr_node); }
-#line 1918 "langparse.c"
+#line 1907 "langparse.c"
     break;
 
   case 46: /* expr: expr EQUALS addit  */
-#line 511 "lang.y"
+#line 500 "lang.y"
 { (yyval.expr_node) = new cBinaryExprNode((yyvsp[-2].expr_node), new cOpNode(EQUALS), (yyvsp[0].expr_node)); }
-#line 1924 "langparse.c"
+#line 1913 "langparse.c"
     break;
 
   case 47: /* expr: expr NOT_EQUALS addit  */
-#line 513 "lang.y"
+#line 502 "lang.y"
 { (yyval.expr_node) = new cBinaryExprNode((yyvsp[-2].expr_node), new cOpNode(NOT_EQUALS), (yyvsp[0].expr_node)); }
-#line 1930 "langparse.c"
+#line 1919 "langparse.c"
     break;
 
   case 48: /* expr: expr '<' addit  */
-#line 515 "lang.y"
+#line 504 "lang.y"
 { (yyval.expr_node) = new cBinaryExprNode((yyvsp[-2].expr_node), new cOpNode('<'), (yyvsp[0].expr_node)); }
-#line 1936 "langparse.c"
+#line 1925 "langparse.c"
     break;
 
   case 49: /* expr: expr '>' addit  */
-#line 517 "lang.y"
+#line 506 "lang.y"
 { (yyval.expr_node) = new cBinaryExprNode((yyvsp[-2].expr_node), new cOpNode('>'), (yyvsp[0].expr_node)); }
-#line 1942 "langparse.c"
+#line 1931 "langparse.c"
     break;
 
   case 50: /* expr: expr LE addit  */
-#line 519 "lang.y"
+#line 508 "lang.y"
 { (yyval.expr_node) = new cBinaryExprNode((yyvsp[-2].expr_node), new cOpNode(LE), (yyvsp[0].expr_node)); }
-#line 1948 "langparse.c"
+#line 1937 "langparse.c"
     break;
 
   case 51: /* expr: expr GE addit  */
-#line 521 "lang.y"
+#line 510 "lang.y"
 { (yyval.expr_node) = new cBinaryExprNode((yyvsp[-2].expr_node), new cOpNode(GE), (yyvsp[0].expr_node)); }
-#line 1954 "langparse.c"
+#line 1943 "langparse.c"
     break;
 
   case 52: /* expr: expr AND addit  */
-#line 523 "lang.y"
+#line 512 "lang.y"
 { (yyval.expr_node) = new cBinaryExprNode((yyvsp[-2].expr_node), new cOpNode(AND), (yyvsp[0].expr_node)); }
-#line 1960 "langparse.c"
+#line 1949 "langparse.c"
     break;
 
   case 53: /* expr: expr OR addit  */
-#line 525 "lang.y"
+#line 514 "lang.y"
 { (yyval.expr_node) = new cBinaryExprNode((yyvsp[-2].expr_node), new cOpNode(OR), (yyvsp[0].expr_node)); }
-#line 1966 "langparse.c"
+#line 1955 "langparse.c"
     break;
 
   case 54: /* expr: addit  */
-#line 527 "lang.y"
+#line 516 "lang.y"
 { (yyval.expr_node) = (yyvsp[0].expr_node); }
-#line 1972 "langparse.c"
+#line 1961 "langparse.c"
     break;
 
   case 55: /* addit: addit '+' term  */
-#line 530 "lang.y"
+#line 519 "lang.y"
 { (yyval.expr_node) = new cBinaryExprNode((yyvsp[-2].expr_node), new cOpNode('+'), (yyvsp[0].expr_node)); }
-#line 1978 "langparse.c"
+#line 1967 "langparse.c"
     break;
 
   case 56: /* addit: addit '-' term  */
-#line 532 "lang.y"
+#line 521 "lang.y"
 { (yyval.expr_node) = new cBinaryExprNode((yyvsp[-2].expr_node), new cOpNode('-'), (yyvsp[0].expr_node)); }
-#line 1984 "langparse.c"
+#line 1973 "langparse.c"
     break;
 
   case 57: /* addit: term  */
-#line 534 "lang.y"
+#line 523 "lang.y"
 { (yyval.expr_node) = (yyvsp[0].expr_node); }
-#line 1990 "langparse.c"
+#line 1979 "langparse.c"
     break;
 
   case 58: /* term: term '*' fact  */
-#line 537 "lang.y"
+#line 526 "lang.y"
 { (yyval.expr_node) = new cBinaryExprNode((yyvsp[-2].expr_node), new cOpNode('*'), (yyvsp[0].expr_node)); }
-#line 1996 "langparse.c"
+#line 1985 "langparse.c"
     break;
 
   case 59: /* term: term '/' fact  */
-#line 539 "lang.y"
+#line 528 "lang.y"
 { (yyval.expr_node) = new cBinaryExprNode((yyvsp[-2].expr_node), new cOpNode('/'), (yyvsp[0].expr_node)); }
-#line 2002 "langparse.c"
+#line 1991 "langparse.c"
     break;
 
   case 60: /* term: term '%' fact  */
-#line 541 "lang.y"
+#line 530 "lang.y"
 { (yyval.expr_node) = new cBinaryExprNode((yyvsp[-2].expr_node), new cOpNode('%'), (yyvsp[0].expr_node)); }
-#line 2008 "langparse.c"
+#line 1997 "langparse.c"
     break;
 
   case 61: /* term: fact  */
-#line 543 "lang.y"
+#line 532 "lang.y"
 { (yyval.expr_node) = (yyvsp[0].expr_node); }
-#line 2014 "langparse.c"
+#line 2003 "langparse.c"
     break;
 
   case 62: /* fact: '(' expr ')'  */
-#line 546 "lang.y"
+#line 535 "lang.y"
                                 { (yyval.expr_node) = (yyvsp[-1].expr_node); }
-#line 2020 "langparse.c"
+#line 2009 "langparse.c"
     break;
 
   case 63: /* fact: INT_VAL  */
-#line 548 "lang.y"
+#line 537 "lang.y"
                             { (yyval.expr_node) = new cIntExprNode((yyvsp[0].int_val)); }
-#line 2026 "langparse.c"
+#line 2015 "langparse.c"
     break;
 
   case 64: /* fact: FLOAT_VAL  */
-#line 550 "lang.y"
+#line 539 "lang.y"
                             { (yyval.expr_node) = new cFloatExprNode((yyvsp[0].float_val)); }
-#line 2032 "langparse.c"
+#line 2021 "langparse.c"
     break;
 
   case 65: /* fact: varref  */
-#line 552 "lang.y"
+#line 541 "lang.y"
                             { (yyval.expr_node) = (yyvsp[0].expr_node); }
-#line 2038 "langparse.c"
+#line 2027 "langparse.c"
     break;
 
   case 66: /* fact: func_call  */
-#line 554 "lang.y"
+#line 543 "lang.y"
                             { (yyval.expr_node) = (yyvsp[0].expr_node); }
-#line 2044 "langparse.c"
+#line 2033 "langparse.c"
     break;
 
 
-#line 2048 "langparse.c"
+#line 2037 "langparse.c"
 
       default: break;
     }
@@ -2243,7 +2232,7 @@ yyreturn:
   return yyresult;
 }
 
-#line 556 "lang.y"
+#line 545 "lang.y"
 
 
 // Function to format error messages

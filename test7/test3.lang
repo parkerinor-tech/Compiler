@@ -1,0 +1,10 @@
+// Test char variables use byte-sized storage, not word
+program
+{
+    char a;
+    char b;
+    a = 65;
+    b = 97;
+    print(a);
+    print(b);
+}

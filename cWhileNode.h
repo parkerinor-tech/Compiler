@@ -1,29 +1,19 @@
-// cWhileNode.h
-//********************************************************
-// Defines an AST node representing a while loop statement.
-//
-// Example: while (condition) { body }
-//
-
 #pragma once
 #include "cStmtNode.h"
 #include "cExprNode.h"
 
-// Represents a while loop with a condition and body
 class cWhileNode : public cStmtNode
 {
 public:
-    // cond = loop condition
-    // body = statement(s) executed while condition is true
     cWhileNode(cExprNode* cond, cStmtNode* body)
     {
         AddChild(cond);
         AddChild(body);
     }
 
-    // Returns node type identifier
-    virtual string NodeType() { return "while"; }
+    cExprNode* GetCond() { return dynamic_cast<cExprNode*>(GetChild(0)); }
+    cStmtNode* GetBody() { return dynamic_cast<cStmtNode*>(GetChild(1)); }
 
-    // Visitor pattern hook
+    virtual string NodeType() { return "while"; }
     virtual void Visit(cVisitor* visitor) { visitor->Visit(this); }
 };

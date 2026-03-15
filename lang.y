@@ -163,10 +163,8 @@ var_decl:   TYPE_ID IDENTIFIER
         { $$ = new cVarDeclNode($1, $2); CHECK_ERROR(); }
 
 struct_decl:  STRUCT open decls close IDENTIFIER
-                                {
-                                    $$ = nullptr;
-                                    cSymbol* existing5 = g_symbolTable.FindLocal($5->GetName());
-                                    if (existing5 != nullptr && existing5->GetDecl() != nullptr)
+                                { 
+                                    if (g_symbolTable.FindLocal($5->GetName()) != nullptr)
                                     {
                                         SemanticParseError("Symbol " + $5->GetName() +
                                             " already defined in current scope");
@@ -174,16 +172,8 @@ struct_decl:  STRUCT open decls close IDENTIFIER
                                     else
                                     {
                                         cStructDeclNode* sd = new cStructDeclNode($3, $5);
-                                        if (existing5 != nullptr)
-                                        {
-                                            existing5->SetDecl(sd);
-                                            $5 = existing5;
-                                        }
-                                        else
-                                        {
-                                            $5->SetDecl(sd);
-                                            g_symbolTable.Insert($5);
-                                        }
+                                        $5->SetDecl(sd);
+                                        g_symbolTable.Insert($5);
                                         $$ = sd;
                                     }
                                     CHECK_ERROR();
@@ -264,7 +254,6 @@ func_decl:  func_header ';'
                                     cFuncDeclNode* fd = new cFuncDeclNode(header);
                                     if (existing != nullptr && existing->GetDecl() != nullptr && existing->GetDecl()->IsFunc())
                                     {
-                                        // Re-declaration: update existing symbol to point to new fd
                                         existing->SetDecl(fd);
                                         (*g_symbolTable.GetParentScope())[existing->GetName()] = existing;
                                     }

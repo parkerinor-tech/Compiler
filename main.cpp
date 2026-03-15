@@ -25,7 +25,7 @@
 
 #define LAB5B
 #define LAB6
-//#define LAB7
+#define LAB7
 
 // define global variables
 long long cSymbol::nextId;

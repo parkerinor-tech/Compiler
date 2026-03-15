@@ -1,0 +1,14 @@
+// Test comparison operators and precedence
+program
+{
+    int a;
+    int b;
+    a = 5;
+    b = 3;
+    print(a > b);
+    print(a < b);
+    print(a == b);
+    print(a != b);
+    print(a >= 5);
+    print(a <= 4);
+}

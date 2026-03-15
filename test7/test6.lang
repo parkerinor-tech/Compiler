@@ -1,0 +1,17 @@
+// Test if statement with and without else
+program
+{
+    int a;
+    a = 5;
+    if (a > 3)
+        print(1);
+    endif;
+    if (a < 3)
+        print(2);
+    endif;
+    if (a == 5)
+        print(3);
+    else
+        print(4);
+    endif;
+}

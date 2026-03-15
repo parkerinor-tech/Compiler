@@ -16,6 +16,7 @@ OBJS=main.o \
 	 cSymbol.o \
 	 langparse.o \
 	 cVisitor.o \
+	 emit.o \
 
 all: lang
 
@@ -47,4 +48,3 @@ langparse.c: lang.y
 
 lang: $(OBJS)
 	g++ $(OBJS) -o lang
-

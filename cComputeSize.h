@@ -64,8 +64,8 @@ public:
         int size = ComputeVarSize(node);
         node->SetSize(size);
 
-        if (size > 1)
-            m_offset = RoundUp(m_offset);
+        // Always word-align so pushvar/pushcvar offsets are valid
+        m_offset = RoundUp(m_offset);
 
         node->SetOffset(m_offset);
         m_offset += size;
@@ -190,9 +190,26 @@ public:
     }
 
     //----------------------------------------------------------
-    // ArrayDecl: type definition only, no offset needed
+    // ArrayDecl: allocate space for the array variable
     //----------------------------------------------------------
-    virtual void Visit(cArrayDeclNode* node) override { /* no-op */ }
+    virtual void Visit(cArrayDeclNode* node) override
+    {
+        // Compute total size: count * element_size
+        int elemSize = 0;
+        cSymbol* elemSym = node->GetElemTypeSym();
+        if (elemSym != nullptr && elemSym->GetDecl() != nullptr)
+            elemSize = ComputeDeclSize(elemSym->GetDecl());
+        int totalSize = node->GetCount() * elemSize;
+        node->SetSize(totalSize);
+
+        // Arrays always word-aligned
+        m_offset = RoundUp(m_offset);
+        node->SetOffset(m_offset);
+        m_offset += totalSize;
+
+        if (m_offset > m_highWater)
+            m_highWater = m_offset;
+    }
 
     //----------------------------------------------------------
     // DeclsNode: visit children and record total size

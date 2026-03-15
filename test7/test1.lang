@@ -1,0 +1,7 @@
+// Test the printing of ints 
+program
+{
+    int a;
+    a = 5;
+    print(a);
+}

@@ -1,0 +1,11 @@
+// Test function with no parameters
+program
+{
+    int foo()
+    {
+        return 42;
+    }
+    int a;
+    a = foo();
+    print(a);
+}

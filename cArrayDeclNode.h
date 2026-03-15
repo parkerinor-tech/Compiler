@@ -14,7 +14,7 @@ public:
     }
 
     virtual bool IsArray() override { return true; }
-    virtual bool IsType()  override { return true; }
+    virtual bool IsType()  override { return false; }
 
     int GetCount() { return m_count; }
     cSymbol* GetElemTypeSym() { return dynamic_cast<cSymbol*>(GetChild(0)); }

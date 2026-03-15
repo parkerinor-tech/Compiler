@@ -1,0 +1,10 @@
+<program size="4"><block size="4"><decls size="4"><var_decl size="4" offset="0"><sym id="2" name="int" /><sym id="6" name="a" /></var_decl>
+</decls>
+<stmts><assign><varref size="4" offset="0"><sym id="6" name="a" /></varref>
+<int value="5" /></assign>
+<print><varref size="4" offset="0"><sym id="6" name="a" /></varref>
+</print>
+</stmts>
+</block>
+</program>
+

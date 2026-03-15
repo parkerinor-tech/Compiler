@@ -1,18 +1,11 @@
-// cIfNode.h
-// Defines an AST node representing an if statement, optionally with an else branch.
-
 #pragma once
 #include "cStmtNode.h"
 #include "cExprNode.h"
 #include "cStmtsNode.h"
 
-// Represents an if statement: if (condition) { ifPart } else { elsePart }
 class cIfNode : public cStmtNode
 {
 public:
-    // cond     = condition expression
-    // ifPart   = statements executed if condition is true
-    // elsePart = optional statements executed if condition is false
     cIfNode(cExprNode* cond, cStmtsNode* ifPart, cStmtsNode* elsePart = nullptr)
     {
         AddChild(cond);
@@ -20,9 +13,12 @@ public:
         if (elsePart) AddChild(elsePart);
     }
 
-    // Returns node type identifier
-    virtual string NodeType() { return "if"; }
+    cExprNode*  GetCond()   { return dynamic_cast<cExprNode*> (GetChild(0)); }
+    cStmtsNode* GetIfPart() { return dynamic_cast<cStmtsNode*>(GetChild(1)); }
+    cStmtsNode* GetElse()   { return (GetNumChildren() > 2)
+                                     ? dynamic_cast<cStmtsNode*>(GetChild(2))
+                                     : nullptr; }
 
-    // Visitor pattern hook
+    virtual string NodeType() { return "if"; }
     virtual void Visit(cVisitor* visitor) { visitor->Visit(this); }
 };
